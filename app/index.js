@@ -3,38 +3,41 @@ console.log('hello world');
 // [
 //     {
 //          title: '리스트 제목'
-//          num: '1'
+//          list_idx: 0
+//          count: 0
 //          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'}
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
 //         ]
 //     },
 //     {
 //          title: '리스트 제목'
-//          num: '2'
+//          list_idx: 1
+//          count: 0
 //          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'}
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
 //         ]
 //     },
 //     {
 //          title: '리스트 제목'
-//          num: '3'
+//          list_idx: 2
+//          count: 0
 //          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'},
-//             {"card_title": "카드제목", 'img': '이미지 이름'}
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
+//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
 //         ]
 //     },
 // ]
 
 const listArr = [];
-let indexNum = 0;
+let list_idx = 0;
 
 
 const root = document.querySelector("#root");
@@ -76,10 +79,10 @@ const render = function() {
         </div>
         <div class="cards flex">
         ${ele.value.map( (card) => {
-            return `<div class="card">${card.card_title}</div>`
+            return `<div class="card" data-idx="${card.card_idx}">${card.card_title}</div>`
         } ).join("")}
         </div>
-        <div class="add_card add_btn flex" data-num="${ele.indexNum}">
+        <div class="add_card add_btn flex" data-num="${ele.list_idx}">
           <p class="plus">+</p>
           <p>Add a card</p>
           <i class="fa fa-edit"></i>
@@ -122,7 +125,7 @@ root.addEventListener('click', function(e) {
     // 카트 추가 버튼 클릭시 실행
     if(e.target.classList.contains('add_card') || e.target.parentNode.classList.contains('add_card')) {
         popupOpen(document.querySelector("#root #insert_card_popup"));
-        insertCardForm.indexNum.value = e.target.dataset.num;
+        insertCardForm.list_idx.value = e.target.dataset.num;
         insertCardForm.content.focus();
 
         return false;
@@ -137,8 +140,8 @@ insertListForm.addEventListener('submit', function(e) {
         alert('리스트명을 입력해주세요');
         return;
     }
-    listArr.push( { title, indexNum, value: [] } );
-    indexNum++;
+    listArr.push( { title, list_idx, value: [], count: 0 } );
+    list_idx++;
     popupClose(e.target.closest('.popup'), e.target.closest('form'));
     render();
 });
@@ -146,13 +149,14 @@ insertListForm.addEventListener('submit', function(e) {
 // 카드 추가할때 실행
 insertCardForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const indexNum = this.indexNum.value;
-    // console.log(indexNum);
+    const list_idx = this.list_idx.value;
+    // console.log(list_idx);
     // console.log(this.content.value);
     // console.log(this.img.value.replace("C:\\fakepath\\", ""));
     listArr.forEach( (ele) => {
-        if(ele.indexNum == indexNum) {
-            ele.value.push( { card_title: this.content.value } );
+        if(ele.list_idx == list_idx) {
+            ele.value.push( { card_title: this.content.value, card_idx: ele.count } );
+            ele.count++;
         }
     } )
     popupClose(e.target.closest('.popup'), e.target.closest('form'));

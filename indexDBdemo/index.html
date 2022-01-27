@@ -11,9 +11,18 @@
     DB <input type="text" value="notes" id="txtDB">
     Version <input type="text" value="1" id="txtVersion">
     <button id="btnCreateDB">CreateDB</button>
+
+
+
+    <button id="btnAddNote">Add Note</button>
     <script>
+
+        const btnCreateDB = document.querySelector("#btnCreateDB");
+        const btnAddNote = document.querySelector("#btnAddNote");
+
+        btnCreateDB.addEventListener('click', createDB);
         
-        const createDB = function(){
+        function createDB(){
 
             const dbName = document.querySelector("#txtDB").value;
             const dbVersion = document.querySelector("#txtVersion").value;
@@ -47,8 +56,7 @@
 
         }
 
-        const btnCreateDB = document.querySelector("#btnCreateDB");
-        btnCreateDB.addEventListener('click', createDB);
+        
 
 
 
