@@ -14,7 +14,7 @@
 <body>
   <div class="root">
 
-    <div class="list__popup none">
+    <div class="list__popup popup none">
       <div class="list__popup--write">
         <h2 class="list__popup--title">ADD LIST</h2>
         <div class="list__input flex">
@@ -29,10 +29,10 @@
       </div>
     </div>
 
-    <div class="card__popup none">
+    <div class="card__popup popup none">
       <div class="list__popup--write card__popup--write">
         <h2 class="list__popup--title">ADD CARD</h2>
-        <div class="img_box"><img src="" alt="" id="card__add--img"></div>
+        <div class="img_box"><img src="" alt="" id="card__add--img" onerror="this.src='./img/noimage.png'" ></div>
         <form action="" name="card__form" class="list__input flex">
           <input type="text" name="card">
           <button id="openFile" class="btn" type="button">이미지</button>
@@ -43,6 +43,22 @@
         </div>
       </div>
     </div>
+    
+    <div class="listModify__popup popup none">
+      <div class="listModify__popup--write">
+        <h2 class="listModify__popup--title">MODIFY LIST</h2>
+        <div class="listModify__input flex">
+          <form action="" name="listModify__form">
+            <input type="text" name="listModify">
+          </form>
+        </div>
+        <div class="popup__btns flex">
+          <button class="listModify__add--btn btn">수정</button>
+          <button class="listModify__cancel--btn btn">취소</button>
+        </div>
+      </div>
+    </div>
+
 
     <div class="container flex">
 
