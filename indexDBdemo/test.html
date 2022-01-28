@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test</title>
+</head>
+<body>
+    DB <input type="text" value="trello" class="txtDB">
+    Version <input type="text" value="1" class="txtVersion">
+
+    <button class="btnCreateDB">Create DB</button>
+    <button class="btnAddDB">Add DB</button>
+    <button class="btnViewDB">View DB</button>
+
+
+    <script>
+        let db = null;
+        const btnCreateDB = document.querySelector(".btnCreateDB");
+        const btnAddDB = document.querySelector(".btnAddDB");
+        const btnViewDB = document.querySelector(".btnViewDB");
+
+        btnCreateDB.addEventListener('click', createDB)
+        btnAddDB.addEventListener('click', addList)
+        btnViewDB.addEventListener('click', viewList);
+
+        function viewList() {
+
+            const tx = db.transaction("list", "readonly");
+            const tList = tx.objectStore("list");
+            const request = tList.openCursor();
+            request.onsuccess = e => {
+                
+                const cursor = e.target.result;
+    
+                if(cursor) {
+                    console.log(cursor);
+    
+                    cursor.continue();
+                }
+
+            }
+            
+        }
+
+        function addList() {
+
+            const list = {
+                title: '리스트 제목',
+                list_idx: Math.random(),
+                count: 0,
+                value: []
+            };
+
+            const tx = db.transaction("list", "readwrite");
+            const tList = tx.objectStore("list");
+            tList.add(list);
+        }
+
+
+        function createDB() {
+
+            const dbName = document.querySelector(".txtDB").value;
+            const dbVersion = document.querySelector(".txtVersion").value;
+
+            const request = indexedDB.open(dbName, dbVersion);
+
+            request.onupgradeneeded = e => {
+                db = e.target.result;
+
+                const list = db.createObjectStore("list", {keyPath: "list_idx"});
+
+            }
+
+            request.onsuccess = e => {
+                db = e.target.result;
+
+            }
+
+        }
+
+    </script>
+
+    
+</body>
+</html>
