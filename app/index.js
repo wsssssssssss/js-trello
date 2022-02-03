@@ -1,90 +1,10 @@
 console.log('hello world');
 
-// [
-//     {
-//          title: '리스트 제목'
-//          list_idx: 0
-//          count: 0
-//          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
-//         ]
-//     },
-//     {
-//          title: '리스트 제목'
-//          list_idx: 1
-//          count: 0
-//          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
-//         ]
-//     },
-//     {
-//          title: '리스트 제목'
-//          list_idx: 2
-//          count: 0
-//          value: [
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 1},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 2},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 3},
-//             {"card_title": "카드제목", 'img': '이미지 이름' card_idx: 4}
-//         ]
-//     },
-// ]
-
-let db = null;
-
-// const dbSuccess = function() {
-//     const request = indexedDB.open('trello', 1);
-
-//     request.onupgradeneeded = (e) => {
-//         db = e.target.result;
-
-//         const list = db.createObjectStore("list", {keyPath: "list_idx"});
-//     }
-
-//     request.onsuccess = (e) => {
-//         db = e.target.result;
-//     }
-// }
-
-const createDB = async function() {
-    
-    const request = await indexedDB.open('trello', 1);
-    // console.log(request);
-
-    request.onupgradeneeded = function(e) {
-        db = e.target.result;
-
-        const list = db.createObjectStore("list", {keyPath: "list_idx"});
-    }
-
-    request.onsuccess = function(e) {
-        db = e.target.result;
-
-    }
-
-}
-
-window.addEventListener('load', function() {
-    createDB();
-
-    const request = indexedDB.open('trello', 1);
-    request.onsuccess = e => {
-        db = e.target.result;
-        render();
-    }
-
-});
-
 
 const listArr = [];
-let list_idx = 0;   // 이거 db에서 가져와야함
+let list_idx = 0;
 
+let db = null;
 
 const root = document.querySelector("#root");
 const container = document.querySelector("#root .container");
@@ -97,10 +17,31 @@ const insertCardForm = document.querySelector("#root #insert_card_popup form");
 
 
 
+window.addEventListener('load', function() {
+    const request = indexedDB.open('trello', 1);
+
+    request.onupgradeneeded = function(e) {
+        db = e.target.result;
+
+        const list = db.createObjectStore("list", {keyPath: "list_idx"});
+    }
+
+    const request2 = indexedDB.open('trello', 1);
+    request2.onsuccess = e => {
+        db = e.target.result;
+        render();
+    }
+
+});
+
+
+
+// 팝업 띄우기
 const popupOpen = function(popup) {
     popup.classList.remove('none');
 }
 
+// 팝업 지우기
 const popupClose = function(popup, form) {
     popup.classList.add('none');
     form.reset();
@@ -120,19 +61,18 @@ const render = async function() {
         const cursor = e.target.result;
 
         if(cursor) {
-            console.log(cursor);
             const list = document.createElement('div');
             list.classList.add('list');
             list.innerHTML = `
-            <div class="title">
+            <div class="title flex">
               <h3>${cursor.value.title}</h3>
-              <div class="menu"></div>
+              <div class="menu"> <i class="fa fa-chevron-down" data-listIdx="${cursor.value.list_idx}"></i> </div>
             </div>
             <div class="cards flex">
             ${cursor.value.value.map( (card) => {
-                if(card.img) {
+                if(card.img !== '') {
                     return `
-                    <div class="card flex" data-listIdx="${ele.list_idx}" data-cardIdx="${card.card_idx}">
+                    <div class="card flex" data-listIdx="${cursor.value.list_idx}" data-cardIdx="${card.card_idx}">
                         <div class="photo">
                             <img src="${card.img}">
                         </div>
@@ -180,15 +120,54 @@ root.addEventListener('click', function(e) {
     if(e.target.classList.contains('add_card') || e.target.parentNode.classList.contains('add_card')) {
         popupOpen(document.querySelector("#root #insert_card_popup"));
         insertCardForm.list_idx.value = e.target.dataset.num || e.target.parentNode.dataset.num;
-        insertCardForm.content.focus();
+        insertCardForm.title.focus();
 
         return false;
     }
+
+    // 리스트 메뉴 클릭시 실행
+    if(e.target.classList.contains("fa-chevron-down")) {
+        const menu = document.createElement("div");
+        menu.classList.add("list_menu");
+        menu.innerHTML = `
+        <div class="list_delete" data-listidx="${e.target.dataset.listidx}">삭제</div>
+        `;
+        e.target.appendChild(menu);
+
+        e.target.classList.toggle("high");
+        e.target.classList.toggle("fa-chevron-down");
+        e.target.classList.toggle("fa-chevron-up");
+
+        return false;
+    }
+
+    if(e.target.classList.contains("fa-chevron-up")) {
+        e.target.children[0].remove()
+        e.target.classList.toggle("high");
+        e.target.classList.toggle("fa-chevron-down");
+        e.target.classList.toggle("fa-chevron-up");
+
+        return false;
+    }
+
+    // 리스트 삭제 버튼 클릭시 실행
+    if(e.target.classList.contains("list_delete")) {
+        if(confirm("리스트를 삭제 하시겠습니까?")) {
+            const tx = db.transaction("list", "readwrite");
+            const tList = tx.objectStore("list");
+            tList.delete(parseInt(e.target.dataset.listidx));
+            render();
+        }
+        
+    }
+
+
 })
 
 // 리스트 추가할때 실행
 insertListForm.addEventListener('submit', function(e) {
     e.preventDefault();
+    const event = e;
     const title = this.title.value;
     if(title === ""){
         alert('리스트명을 입력해주세요');
@@ -196,86 +175,79 @@ insertListForm.addEventListener('submit', function(e) {
 
         return;
     }
-    const list = {
-        title,
-        list_idx,
-        count: 0,
-        value: []
-    };
 
-    createDB();
     const tx = db.transaction("list", "readwrite");
     const tList = tx.objectStore("list");
-    tList.add(list);
+    const request = tList.openCursor(null, "prev");
 
-    list_idx++;
-    popupClose(e.target.closest('.popup'), e.target.closest('form'));
-    render();
+    request.onsuccess = e => {
+        const cursor = e.target.result;
+        list_idx = cursor ? cursor.value.list_idx + 1 : 0;
+
+        tList.add( { title, list_idx, count: 0, value: [] } );
+    
+        popupClose(event.target.closest('.popup'), event.target.closest('form'));
+        render();
+    }
+
 });
 
 // 카드 추가할때 실행
 insertCardForm.addEventListener('submit', function(e) {
     e.preventDefault();
+    // console.log("submit");
     const form = this;
+    const event = e;
     const list_idx = this.list_idx.value;
 
-    if(this.content.value === ""){
+    if(this.title.value === ""){
         alert("카드 내용을 입력해주세요");
         this.content.focus();
-
         return;
     }
 
+    const searchFun = (imgSrc = '') => {
+        const tx = db.transaction("list", "readwrite");
+        const tList = tx.objectStore("list");
+        const request = tList.openCursor();
 
-    // 이부분 해야함
+        request.onsuccess = e => {
+            const cursor = e.target.result;
 
-    let imgSrc = '';
+            if(cursor) {
+                if(cursor.key === parseInt(list_idx)) {
+                    const updateData = cursor.value;
+
+                    updateData.value.push( { card_title: form.title.value, card_content: "설명을 입력해주세요..", card_idx: updateData.count, img: imgSrc } );
+                    updateData.count++;
+                    
+                    const request2 = cursor.update(updateData);
+                    request2.onsuccess = () => {
+                        document.querySelector("#root #insert_card_popup .photo img").src = '';
+                        
+                        popupClose(event.target.closest('.popup'), event.target.closest('form'));
+                        render();
+                        // console.log(updateData);
+                    }
+                }
+
+                cursor.continue();
+            }
+        }
+    }
+
     const img = this.img.files[0];
     const reader = new FileReader();
-    if(img){
+ 
+    if(img){``
         reader.readAsDataURL(img);
+        reader.onload = function() {
+            const imgSrc = reader.result;
+            searchFun(imgSrc);
+        }
+    } else {
+        searchFun();
     }
-    reader.onload = function() {
-        listArr.forEach( (ele) => {
-            if(ele.list_idx == list_idx) {
-                ele.value.push( { card_title: form.content.value, card_idx: ele.count, img: imgSrc } );
-                ele.count++;
-            }
-        } )
-        document.querySelector("#root #insert_card_popup .photo img").src = '';
-    
-        popupClose(e.target.closest('.popup'), e.target.closest('form'));
-        render();
-    }
-    
-    // if(img !== undefined) {
-    //     const reader = new FileReader();
-    //     reader.readAsDataURL(img);
-    //     reader.onload = function() {
-    //         imgSrc = reader.result;
-    //         listArr.forEach( (ele) => {
-    //             if(ele.list_idx == list_idx) {
-    //                 ele.value.push( { card_title: form.content.value, card_idx: ele.count, img: imgSrc } );
-    //                 ele.count++;
-    //             }
-    //         } )
-    //         document.querySelector("#root #insert_card_popup .photo img").src = '';
-        
-    //         popupClose(e.target.closest('.popup'), e.target.closest('form'));
-    //         render();
-    //     }
-    // } else {
-    //     listArr.forEach( (ele) => {
-    //         if(ele.list_idx == list_idx) {
-    //             ele.value.push( { card_title: this.content.value, card_idx: ele.count, img: imgSrc } );
-    //             ele.count++;
-    //         }
-    //     } )
-    //     document.querySelector("#root #insert_card_popup .photo img").src = '';
-        
-    //     popupClose(e.target.closest('.popup'), e.target.closest('form'));
-    //     render();
-    // }
     
 })
 
