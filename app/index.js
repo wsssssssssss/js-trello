@@ -11,10 +11,8 @@ const container = document.querySelector("#root .container");
 
 const popup = document.querySelectorAll("#root .popup");
 
-
 const insertListForm = document.querySelector("#root #insert_list_popup form");
 const insertCardForm = document.querySelector("#root #insert_card_popup form");
-
 
 
 window.addEventListener('load', function() {
@@ -33,7 +31,6 @@ window.addEventListener('load', function() {
     }
 
 });
-
 
 
 // 팝업 띄우기
@@ -66,13 +63,13 @@ const render = async function() {
             list.innerHTML = `
             <div class="title flex">
               <h3>${cursor.value.title}</h3>
-              <div class="menu"> <i class="fa fa-chevron-down" data-listIdx="${cursor.value.list_idx}"></i> </div>
+              <div class="menu"> <i class="fa fa-chevron-down" data-listidx="${cursor.value.list_idx}"></i> </div>
             </div>
             <div class="cards flex">
             ${cursor.value.value.map( (card) => {
                 if(card.img !== '') {
                     return `
-                    <div class="card flex" data-listIdx="${cursor.value.list_idx}" data-cardIdx="${card.card_idx}">
+                    <div class="card flex" data-listidx="${cursor.value.list_idx}" data-cardIdx="${card.card_idx}">
                         <div class="photo">
                             <img src="${card.img}">
                         </div>
@@ -80,7 +77,7 @@ const render = async function() {
                     </div>`
                 } else {
                     return `
-                    <div class="card flex" data-idx="${card.card_idx}">
+                    <div class="card flex" data-listidx="${cursor.value.list_idx}"  data-cardIdx="${card.card_idx}">
                         <h3>${card.card_title}</h3>
                     </div>`
                 }
@@ -159,6 +156,48 @@ root.addEventListener('click', function(e) {
             render();
         }
         
+        return false;
+    }
+
+    // 카드 클릭시 실행
+    if(e.target.closest(".card")) {
+        // console.log(e.target);
+        const card_popup = document.querySelector("#card_popup");
+        const card_form = document.querySelector("#card_popup form");
+        const card = e.target.closest(".card");
+        popupOpen(card_popup);
+
+        const list_idx = parseInt(card.dataset.listidx);
+        const card_idx = parseInt(card.dataset.cardidx);
+
+        
+        
+
+        const tx = db.transaction("list", "readonly");
+        const tList = tx.objectStore("list");
+        const request = tList.openCursor();
+        request.onsuccess = e => {
+            const cursor = e.target.result;
+
+            if(cursor) {
+                if(cursor.key === list_idx) {
+                    cursor.value.value.forEach( (ele) => {
+                        if(ele.card_idx === card_idx) {
+                            card_form.list_idx.value = list_idx;
+                            card_form.card_idx.value = card_idx;
+                            document.querySelector("#card_popup .title h3").innerText = ele.card_title;
+                            document.querySelector("#card_popup .photo img").src = ele.img;
+                            card_form.content.value = ele.card_content;
+                            
+                            console.log(ele);
+                        }
+                    } )
+                }
+
+                cursor.continue();
+            }
+        }
+
     }
 
 
@@ -258,6 +297,16 @@ document.querySelector("#root #insert_card_popup .insert_img_btn").addEventListe
     reader.readAsDataURL(img); 
     reader.onload = function() {
         document.querySelector("#root #insert_card_popup .photo img").src = reader.result;
+    }
+    
+})
+
+document.querySelector("#root #card_popup .insert_img_btn").addEventListener('change', function() {
+    const img = this.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(img); 
+    reader.onload = function() {
+        document.querySelector("#root #card_popup .photo img").src = reader.result;
     }
     
 })
