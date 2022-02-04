@@ -53,11 +53,7 @@
             <div class="title">
               <h3>카드 추가</h3>
             </div>
-            <div class="photo">
-              <img src="" alt="">
-            </div>
-            <input type="file" accept="image/*" name="img" class="insert_img_btn">
-            <textarea name="title" class="text_title" placeholder="카드제목을 입력하세요"></textarea>
+            <input name="title" class="text_title" placeholder="카드제목을 입력하세요">
             <div class="btns flex">
               <input type="button" class="close btn" value="취소">
               <input type="submit" class="submit_btn btn" id="insert_card_btn" value="카드 추가">
@@ -74,16 +70,19 @@
           <input type="hidden" name="card_idx" value="">
           <div class="card_popup flex">
             <div class="title">
-              <h3 contenteditable="true"></h3>
+              <!-- <h3 contenteditable="true"></h3> -->
+              <h3 class="card_title"></h3>
             </div>
             <div class="photo">
               <img src="" alt="">
             </div>
-            <input type="file" accept="image/*" name="img" class="insert_img_btn">
+            <div class="img_btn flex">
+              <p class="img_text">이미지 추가</p> <input type="file" accept="image/*"  name="img" class="insert_img_btn">
+            </div>
             <textarea name="content" class="text_content"></textarea>
             <div class="btns flex">
-              <input type="button" class="close btn" value="취소">
-              <input type="submit" class="submit_btn btn" id="insert_card_btn" value="카드 수정">
+              <input type="button" class="close btn" value="닫기">
+              <input type="button" class="card_delete btn" id="card_delete_btn" value="카드 삭제">
             </div>
           </div>
         </form>

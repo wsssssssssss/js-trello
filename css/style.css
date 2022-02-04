@@ -20,7 +20,7 @@ i{color: #000;}
 .container .list .title h3{overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .container .list .title i{padding: 10px 11px; position: relative; cursor: pointer; font-size: 18.5px; border-radius: 100%; transition: .3s;}
 .container .list .title i:hover{transition: .3s; background: #ddd;}
-.container .list .title i .list_menu{width: 100px; line-height: 40px; text-align: center; background: #fff; border: 1px solid #eee; position: absolute; top: 100%; right: 0; border-radius: 5px;}
+.container .list .title i .list_menu{width: 110px; line-height: 40px; text-align: center; background: #fff; border: 1px solid #eee; position: absolute; top: 100%; right: 0; border-radius: 5px;}
 .container .list .title i .list_menu div{font-size: 17px; transition: .3s; border-radius: 5px; z-index: 10;}
 .container .list .title i .list_menu div:hover{transition: .3s; background: #000; color: #fff;}
 .container .list .cards{width: 95%; margin: 10px auto; flex-direction: column; gap: 10px;}
@@ -38,7 +38,7 @@ i{color: #000;}
 
 .popup{position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, .3); justify-content: center; align-items: center; z-index: 100;}
 .popup .title{padding: 5px;}
-.popup .title h3{font-size: 27px; color: rgb(90, 104, 237);}
+.popup .title h3{width: 95%; line-height: 50px; font-size: 27px; color: rgb(90, 104, 237);}
 .popup .btns{width: 100%; margin: 5px 0; justify-content: center; gap: 10px;}
 .popup .btns .btn{width: 40%; height: 45px; background: #eee; border: none; font-size: 15px; border-radius: 5px; cursor: pointer;}
 .popup .btns .close{transition: .3s;}
@@ -53,17 +53,23 @@ i{color: #000;}
 .popup .insert_list_popup .list_title{border: none; outline: none; padding: 5px 10px; line-height: 45px; font-size: 18px;}
 
 /* 카트 추가하는 팝업 */
-.popup .insert_card_popup{width: 370px; height: 500px; padding: 20px; border-radius: 7px; background: #fff; flex-direction: column;}
-.popup .insert_card_popup .photo{width: 95%; height: 150px; overflow: hidden; margin: 5px auto; border: 1px solid #000; border-radius: 5px;}
-.popup .insert_card_popup .photo img{width: 100%; height: 100%; object-fit: cover;}
-.popup .insert_card_popup .insert_img_btn{padding: 5px 10px;}
-.popup .insert_card_popup .text_title{font-size: 15px; height: 120px; padding: 5px; resize: none; outline: none; border: none; margin: 20px 0 10px 0;}
+.popup .insert_card_popup{width: 370px; height: 230px; padding: 20px; border-radius: 7px; background: #fff; flex-direction: column;}
+.popup .insert_card_popup .text_title{font-size: 20px; height: 120px; padding: 5px; resize: none; outline: none; border: none; margin: 20px 0 10px 0;}
 
 /* 카드 팝업 */
 .popup .card_popup{width: 400px; height: 550px; padding: 20px 15px; border-radius: 10px; background: #fff; flex-direction: column;}
+.popup .card_popup .title{justify-content: space-between;}
+.popup .card_popup .title .card_delete{width: 80px; height: 35px; cursor: pointer;}
+.popup .card_popup .title .card_title_ipt{width: 95%; line-height: 50px; font-size: 27px; color: rgb(90, 104, 237); outline: none; border: none; font-weight: bold;}
 .popup .card_popup .photo{width: 95%; height: 200px; overflow: hidden; margin: 5px auto; border: 1px solid #000; border-radius: 5px;}
 .popup .card_popup .photo img{width: 100%; height: 100%; object-fit: cover;}
 .popup .card_popup .insert_img_btn{padding: 5px 10px;}
 .popup .card_popup .text_content{font-size: 15px; height: 120px; padding: 5px; resize: none; outline: none; border: none; margin: 20px 0 10px 0;}
+
+.popup .card_popup .img_btn{padding: 5px; line-height: 40px; align-items: center;}
+
+.popup .btns .card_delete{background: rgb(90, 104, 237); color: #fff; transition: .3s;}
+.popup .btns .card_delete:hover{background: rgb(50, 67, 219); transition: .3s;}
+
 
 .high{background: #ddd;}

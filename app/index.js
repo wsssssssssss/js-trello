@@ -1,5 +1,3 @@
-console.log('hello world');
-
 
 const listArr = [];
 let list_idx = 0;
@@ -13,6 +11,12 @@ const popup = document.querySelectorAll("#root .popup");
 
 const insertListForm = document.querySelector("#root #insert_list_popup form");
 const insertCardForm = document.querySelector("#root #insert_card_popup form");
+
+const cardPopupImgBtn = document.querySelector("#root #card_popup .insert_img_btn");
+const cardPopupImg = document.querySelector("#root #card_popup .photo img");
+const cardPopupContent = document.querySelector("#root #card_popup textarea");
+
+let cardTitleChg = false;
 
 
 window.addEventListener('load', function() {
@@ -32,27 +36,36 @@ window.addEventListener('load', function() {
 
 });
 
+const readonlyList = () => {
+    const tx = db.transaction("list", "readonly");
+    return tx.objectStore("list");
+};
+
+const readwriteList = () => {
+    const tx = db.transaction("list", "readwrite");
+    return tx.objectStore("list");
+};
+
 
 // 팝업 띄우기
-const popupOpen = function(popup) {
+const popupOpen = (popup) => {
     popup.classList.remove('none');
 }
 
 // 팝업 지우기
-const popupClose = function(popup, form) {
+const popupClose = (popup, form) => {
     popup.classList.add('none');
     form.reset();
 }
 
-const render = async function() {
+const render = () => {
     [...container.children].forEach( (ele) => {
         if(ele.classList.contains('list')){
             ele.remove();
         }
     } )
 
-    const tx = db.transaction("list", "readonly");
-    const tList = tx.objectStore("list");
+    const tList = readonlyList();
     const request = tList.openCursor();
     request.onsuccess = (e) => {
         const cursor = e.target.result;
@@ -127,7 +140,7 @@ root.addEventListener('click', function(e) {
         const menu = document.createElement("div");
         menu.classList.add("list_menu");
         menu.innerHTML = `
-        <div class="list_delete" data-listidx="${e.target.dataset.listidx}">삭제</div>
+        <div class="list_delete" data-listidx="${e.target.dataset.listidx}">리스트 삭제</div>
         `;
         e.target.appendChild(menu);
 
@@ -150,8 +163,7 @@ root.addEventListener('click', function(e) {
     // 리스트 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("list_delete")) {
         if(confirm("리스트를 삭제 하시겠습니까?")) {
-            const tx = db.transaction("list", "readwrite");
-            const tList = tx.objectStore("list");
+            const tList = readwriteList();
             tList.delete(parseInt(e.target.dataset.listidx));
             render();
         }
@@ -161,7 +173,6 @@ root.addEventListener('click', function(e) {
 
     // 카드 클릭시 실행
     if(e.target.closest(".card")) {
-        // console.log(e.target);
         const card_popup = document.querySelector("#card_popup");
         const card_form = document.querySelector("#card_popup form");
         const card = e.target.closest(".card");
@@ -171,10 +182,7 @@ root.addEventListener('click', function(e) {
         const card_idx = parseInt(card.dataset.cardidx);
 
         
-        
-
-        const tx = db.transaction("list", "readonly");
-        const tList = tx.objectStore("list");
+        const tList =  readonlyList();
         const request = tList.openCursor();
         request.onsuccess = e => {
             const cursor = e.target.result;
@@ -185,11 +193,9 @@ root.addEventListener('click', function(e) {
                         if(ele.card_idx === card_idx) {
                             card_form.list_idx.value = list_idx;
                             card_form.card_idx.value = card_idx;
-                            document.querySelector("#card_popup .title h3").innerText = ele.card_title;
-                            document.querySelector("#card_popup .photo img").src = ele.img;
+                            document.querySelector("#root #card_popup .title h3").innerHTML = ele.card_title;
+                            cardPopupImg.src = ele.img;
                             card_form.content.value = ele.card_content;
-                            
-                            console.log(ele);
                         }
                     } )
                 }
@@ -199,6 +205,123 @@ root.addEventListener('click', function(e) {
         }
 
     }
+
+
+    // 카드 삭제 버튼 클릭시 실행
+    if(e.target.classList.contains("card_delete")) {
+        const card_popup = e.target.closest("#card_popup");
+        const card_form = e.target.closest("form");
+        
+        const list_idx = parseInt(card_form.list_idx.value);
+        const card_idx = parseInt(card_form.card_idx.value);
+
+        const tList = readwriteList();
+        const request = tList.openCursor();
+
+        request.onsuccess = (e) => {
+            const cursor = e.target.result;
+            
+            if(cursor) {
+                if(cursor.key === list_idx && confirm("카드를 삭제 하시겠습니까?")) {
+                    const updateData = cursor.value;
+                    
+                    updateData.value.forEach( (ele, idx) => {
+                        if(ele.card_idx === card_idx) {
+                            updateData.value.splice(idx, 1);
+                        }
+                    } )
+
+                    const request2 = cursor.update(updateData);
+                    request2.onsuccess = () => {
+                        popupClose(card_popup, card_form);
+                        render();
+                    }
+                }
+
+                cursor.continue();
+            }
+        };
+
+        return false;
+    }
+
+    // 카드 팝업 제목 클릭시 실행
+    if(e.target.classList.contains("card_title")) {
+        const card_popup = e.target.closest("#card_popup");
+        const card_form = e.target.closest("form");
+
+        cardTitleChg = true;
+
+        const list_idx = parseInt(card_form.list_idx.value);
+        const card_idx = parseInt(card_form.card_idx.value);
+
+        const card_title = e.target.parentNode;
+        const title = e.target.innerText;
+
+        const input = document.createElement('input');
+        input.type = "text";
+        input.setAttribute("value", title)
+        input.classList.add("card_title_ipt");
+        card_title.appendChild(input);
+        input.focus();
+        
+        e.target.remove();
+
+        const titleChangeFunc = () => {
+            const input = document.querySelector("#card_popup .title input");
+            const titleTag = document.createElement('h3');
+            titleTag.classList.add('card_title');
+            titleTag.innerText = input.value;
+            card_title.appendChild(titleTag);
+            cardTitleChg = false;
+
+            const tList = readwriteList();
+            const request = tList.openCursor();
+
+            request.onsuccess = (e) => {
+                const cursor = e.target.result;
+
+                if(cursor){
+                    if(cursor.key === list_idx) {
+                        const updateData = cursor.value;
+
+                        updateData.value.forEach( (ele) => {
+                            if(ele.card_idx === card_idx) {
+                                ele.card_title = input.value;
+                            }
+                        } )
+
+                        const request2 = cursor.update(updateData);
+                        request2.onsuccess = () => {
+                            render();
+                        }
+                    }
+                    cursor.continue();
+                }
+            }
+            input.remove();
+        }
+
+
+        input.addEventListener('keydown', function(e) {
+            if(e.key === "Enter"){
+                e.preventDefault();
+                if(cardTitleChg){
+                    titleChangeFunc(); 
+                }
+            }
+        })
+
+        input.addEventListener('blur', function(e) {
+            if(cardTitleChg){
+                titleChangeFunc(); 
+            }
+        })
+    }
+
+
+
+
 
 
 })
@@ -215,8 +338,7 @@ insertListForm.addEventListener('submit', function(e) {
         return;
     }
 
-    const tx = db.transaction("list", "readwrite");
-    const tList = tx.objectStore("list");
+    const tList = readwriteList();
     const request = tList.openCursor(null, "prev");
 
     request.onsuccess = e => {
@@ -234,81 +356,96 @@ insertListForm.addEventListener('submit', function(e) {
 // 카드 추가할때 실행
 insertCardForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    // console.log("submit");
     const form = this;
     const event = e;
     const list_idx = this.list_idx.value;
 
     if(this.title.value === ""){
         alert("카드 내용을 입력해주세요");
-        this.content.focus();
+        this.title.focus();
         return;
     }
 
-    const searchFun = (imgSrc = '') => {
-        const tx = db.transaction("list", "readwrite");
-        const tList = tx.objectStore("list");
-        const request = tList.openCursor();
+    const tList = readwriteList();
+    const request = tList.openCursor();
 
-        request.onsuccess = e => {
-            const cursor = e.target.result;
+    request.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if(cursor) {
+            if(cursor.key === parseInt(list_idx)) {
+                const updateData = cursor.value;
 
-            if(cursor) {
-                if(cursor.key === parseInt(list_idx)) {
-                    const updateData = cursor.value;
-
-                    updateData.value.push( { card_title: form.title.value, card_content: "설명을 입력해주세요..", card_idx: updateData.count, img: imgSrc } );
-                    updateData.count++;
-                    
-                    const request2 = cursor.update(updateData);
-                    request2.onsuccess = () => {
-                        document.querySelector("#root #insert_card_popup .photo img").src = '';
-                        
-                        popupClose(event.target.closest('.popup'), event.target.closest('form'));
-                        render();
-                        // console.log(updateData);
-                    }
+                updateData.value.push( { card_title: form.title.value, card_content: "설명을 입력해주세요..", card_idx: updateData.count, img: '' } );
+                updateData.count++;
+                
+                // console.log(cursor);
+                // console.log(cursor.key);
+                const request2 = cursor.update(updateData);
+                request2.onsuccess = () => {
+                    popupClose(event.target.closest('.popup'), event.target.closest('form'));
+                    render();
                 }
-
-                cursor.continue();
             }
+            cursor.continue();
         }
     }
 
-    const img = this.img.files[0];
-    const reader = new FileReader();
- 
-    if(img){``
-        reader.readAsDataURL(img);
-        reader.onload = function() {
-            const imgSrc = reader.result;
-            searchFun(imgSrc);
-        }
-    } else {
-        searchFun();
-    }
-    
+
 })
 
 
-document.querySelector("#root #insert_card_popup .insert_img_btn").addEventListener('change', function() {
-    const img = this.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(img); 
-    reader.onload = function() {
-        document.querySelector("#root #insert_card_popup .photo img").src = reader.result;
-    }
-    
-})
+cardPopupImgBtn.addEventListener('change', function(e) {
+    const card_popup = e.target.closest("#card_popup");
+    const card_form = e.target.closest("form");
 
-document.querySelector("#root #card_popup .insert_img_btn").addEventListener('change', function() {
+    const list_idx = parseInt(card_form.list_idx.value);
+    const card_idx = parseInt(card_form.card_idx.value);
+
     const img = this.files[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(img); 
-    reader.onload = function() {
-        document.querySelector("#root #card_popup .photo img").src = reader.result;
-    }
-    
+
+    const tx = db.transaction("list", "readonly");
+    const tList = tx.objectStore("list");
+    const request = tList.openCursor();
+
+    // request.onsuccess = (e) => {
+    //     const cursor = e.target.result;
+
+    //     if(cursor) {
+    //         if(cursor.key === parseInt(list_idx)) {
+    //             // let index = 0;
+    //             // console.log(cursor);
+    //             // console.log(cursor.value);
+    //             const updateData = cursor.value;
+    //             // console.log(cursor.key);
+
+
+    //             updateData.value.forEach( (ele) => {
+    //                 if(ele.card_idx === card_idx) {
+    //                     // console.log(ele);
+    //                     const reader = new FileReader();
+    //                     reader.readAsDataURL(img);
+    //                     reader.onload = () => {
+    //                         cardPopupImg.src = reader.result;
+    //                         ele.img = reader.result;
+
+                            
+    //                         const request2 = cursor.update(updateData);
+    //                         request2.onsuccess = () => {
+    //                             render();
+    //                         }
+    //                     }
+    //                 }
+    //             } )
+            
+    //         }
+
+    //         cursor.continue();
+    //     }
+
+       
+    // }
+
+
 })
 
 
