@@ -72,6 +72,7 @@
             <div class="title">
               <!-- <h3 contenteditable="true"></h3> -->
               <h3 class="card_title"></h3>
+              <input type="text" class="card_title_ipt none" value="">
             </div>
             <div class="photo">
               <img src="" alt="">
@@ -79,7 +80,10 @@
             <div class="img_btn flex">
               <p class="img_text">이미지 추가</p> <input type="file" accept="image/*"  name="img" class="insert_img_btn"> <input type="button" class="img_delete" value="이미지 삭제">
             </div>
-            <textarea name="content" class="card_text_content"></textarea>
+            <div class="text_content">
+              <textarea name="content" class="card_text_content"></textarea>
+              <input type="text" name="content" class="card_text_content_ipt none" value="">
+            </div>
             <div class="btns flex">
               <input type="button" class="close btn" value="닫기">
               <input type="button" class="card_delete btn" id="card_delete_btn" value="카드 삭제">

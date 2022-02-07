@@ -1,6 +1,4 @@
-const listArr = [];
 let list_idx = 0;
-
 let db = null;
 
 const root = document.querySelector("#root");
@@ -18,6 +16,7 @@ const cardPopupContent = document.querySelector("#root #card_popup textarea");
 const cardPopupBtns = document.querySelector("#root #card_popup .btns");
 
 let cardTitleChg = false;
+let cardContentChg = false;
 
 window.addEventListener('load', function() {
     const request = indexedDB.open('trello', 1);
@@ -25,7 +24,7 @@ window.addEventListener('load', function() {
     request.onupgradeneeded = function(e) {
         db = e.target.result;
 
-        const list = db.createObjectStore("list", {keyPath: "list_idx"});
+        db.createObjectStore("list", {keyPath: "list_idx"});
     }
 
     const request2 = indexedDB.open('trello', 1);
@@ -35,6 +34,14 @@ window.addEventListener('load', function() {
     }
 
 });
+
+const cardCreateVar = (e) => {
+    const card_form = e.target.closest("form");
+    const list_idx = parseInt(card_form.list_idx.value);
+    const card_idx = parseInt(card_form.card_idx.value);
+
+    return { card_form, list_idx, card_idx };
+}
 
 // 카드 팝업의 이미지 버튼 띄우는 함수
 const cardImgEx = function(src){
@@ -146,23 +153,16 @@ root.addEventListener('click', function(e) {
     }
 
     // 리스트 메뉴 클릭시 실행
-    if(e.target.classList.contains("fa-chevron-down")) {
-        const menu = document.createElement("div");
-        menu.classList.add("list_menu");
-        menu.innerHTML = `
-        <div class="list_delete" data-listidx="${e.target.dataset.listidx}">리스트 삭제</div>
-        `;
-        e.target.appendChild(menu);
+    if(e.target.classList.contains("fa-chevron-down") || e.target.classList.contains("fa-chevron-up")) {
+        if(e.target.classList.contains("fa-chevron-down")) {
+            const menu = document.createElement("div");
+            menu.classList.add("list_menu");
+            menu.innerHTML = `<div class="list_delete" data-listidx="${e.target.dataset.listidx}">리스트 삭제</div>`;
+            e.target.appendChild(menu);
+        } else {
+            e.target.children[0].remove();
+        }
 
-        e.target.classList.toggle("high");
-        e.target.classList.toggle("fa-chevron-down");
-        e.target.classList.toggle("fa-chevron-up");
-
-        return false;
-    }
-
-    if(e.target.classList.contains("fa-chevron-up")) {
-        e.target.children[0].remove()
         e.target.classList.toggle("high");
         e.target.classList.toggle("fa-chevron-down");
         e.target.classList.toggle("fa-chevron-up");
@@ -205,7 +205,8 @@ root.addEventListener('click', function(e) {
                             document.querySelector("#root #card_popup .title h3").innerHTML = ele.card_title;
                             cardPopupImg.src = ele.img;
                             cardImgEx(ele.img);
-                            card_form.content.value = ele.card_content;
+                            card_form.content[0].innerText = ele.card_content;
+                            card_form.content[1].value = ele.card_content;
                         }
                     } )
                 }
@@ -214,15 +215,14 @@ root.addEventListener('click', function(e) {
             }
         }
 
+        return false;
     }
 
     // 카드 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("card_delete")) {
         const card_popup = e.target.closest("#card_popup");
-        const card_form = e.target.closest("form");
-        
-        const list_idx = parseInt(card_form.list_idx.value);
-        const card_idx = parseInt(card_form.card_idx.value);
+
+        const { card_form, list_idx, card_idx } = cardCreateVar(e);
 
         const tList = readwriteList();
         const request = tList.openCursor();
@@ -250,15 +250,13 @@ root.addEventListener('click', function(e) {
                 cursor.continue();
             }
         };
+
         return false;
     }
 
     // 카드 팝업의 이미지 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("img_delete")) {
-        const card_form = e.target.closest("form");
-
-        const list_idx = parseInt(card_form.list_idx.value);
-        const card_idx = parseInt(card_form.card_idx.value);
+        const { card_form, list_idx, card_idx } = cardCreateVar(e);
 
         const tList = readwriteList();
         const request = tList.openCursor();
@@ -292,36 +290,32 @@ root.addEventListener('click', function(e) {
                 cursor.continue();
             }
         }
+
         return false;
     }
 
     // 카드 팝업 제목 클릭시 실행
     if(e.target.classList.contains("card_title")) {
-        const card_form = e.target.closest("form");
+        const { card_form, list_idx, card_idx } = cardCreateVar(e);
+
+        const input = document.querySelector("#card_popup .title input");
+        const card_title = e.target;
+        const title = e.target.innerText;
+
+        console.log(list_idx, card_idx);
 
         cardTitleChg = true;
 
-        const list_idx = parseInt(card_form.list_idx.value);
-        const card_idx = parseInt(card_form.card_idx.value);
+        input.classList.toggle('none');
+        card_title.classList.toggle('none');
+        input.value = title;
 
-        const card_title = e.target.parentNode;
-        const title = e.target.innerText;
-
-        const input = document.createElement('input');
-        input.type = "text";
-        input.setAttribute("value", title)
-        input.classList.add("card_title_ipt");
-        card_title.appendChild(input);
         input.focus();
         
-        e.target.remove();
-
         const titleChangeFunc = () => {
-            const input = document.querySelector("#card_popup .title input");
-            const titleTag = document.createElement('h3');
-            titleTag.classList.add('card_title');
-            titleTag.innerText = input.value;
-            card_title.appendChild(titleTag);
+            console.log("titleChangeFunc");
+            input.classList.toggle('none');
+            card_title.classList.toggle('none');
             cardTitleChg = false;
 
             const tList = readwriteList();
@@ -334,9 +328,10 @@ root.addEventListener('click', function(e) {
                     if(cursor.key === list_idx) {
                         const updateData = cursor.value;
 
-                        updateData.value.forEach( (ele) => {
+                        updateData.value.forEach( (ele, idx) => {
                             if(ele.card_idx === card_idx) {
-                                ele.card_title = input.value;
+                                updateData.value.splice(idx, 1, {...ele, card_title: input.value})
+                                card_title.innerText = input.value;
                             }
                         } )
 
@@ -348,7 +343,6 @@ root.addEventListener('click', function(e) {
                     cursor.continue();
                 }
             }
-            input.remove();
         }
 
         input.addEventListener('keydown', function(e) {
@@ -365,18 +359,81 @@ root.addEventListener('click', function(e) {
                 titleChangeFunc(); 
             }
         })
+
+        return false;
     }
 
-    // 이거 해야 함
     // 카드 팝업 설명 클릭시 실행
     if(e.target.classList.contains("card_text_content")) {
-        const card_form = e.target.closest("form");
+        const { card_form, list_idx, card_idx } = cardCreateVar(e);
 
-        // cardTitleChg = true;
+        const input = document.querySelector("#card_popup .text_content input");
+        const textarea = e.target;
 
-        const list_idx = parseInt(card_form.list_idx.value);
-        const card_idx = parseInt(card_form.card_idx.value);
+        cardContentChg = true;
+
+        textarea.classList.toggle('none');
+        input.classList.toggle('none');
+        input.focus();
+
+
+        const contentChangeFunc = () => {
+            textarea.classList.toggle('none');
+            input.classList.toggle('none');
+            cardContentChg = false;
+
+            const tList = readwriteList();
+            const request = tList.openCursor();
+
+            request.onsuccess = (e) => {
+                const cursor = e.target.result;
+
+                if(cursor){
+                    if(cursor.key === list_idx) {
+                        const updateData = cursor.value;
+
+                        updateData.value.forEach( (ele, idx) => {
+                            if(ele.card_idx === card_idx) {
+                                updateData.value.splice(idx, 1, {...ele, card_content: input.value})
+                                textarea.innerText = input.value;
+                            }
+                        } )
+
+                        const requestUpdate = cursor.update(updateData);
+                        requestUpdate.onsuccess = () => {
+                            render();
+                        }
+                    }
+                    cursor.continue();
+                }
+            }
+        }
+  
+        input.addEventListener('keydown', function(e) {
+            if(e.key === "Enter"){
+                e.preventDefault();
+                if(cardContentChg){
+                    contentChangeFunc(); 
+                }
+            }
+        })
+
+        input.addEventListener('blur', function(e) {
+            if(cardContentChg){
+                contentChangeFunc(); 
+            }
+        })
+
+        return false;
     }
+});
+
+
+root.addEventListener('dragstart', function(e) {
+    console.log(e);  
+    // if(e.target.classList.contains('card')){
+    //     console.log(1);
+    // }
 })
 
 // 리스트 추가할때 실행
@@ -384,12 +441,6 @@ insertListForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const event = e;
     const title = this.title.value;
-    if(title === ""){
-        alert('리스트명을 입력해주세요');
-        this.title.focus();
-
-        return;
-    }
 
     const tList = readwriteList();
     const request = tList.openCursor(null, "prev");
@@ -440,7 +491,7 @@ insertCardForm.addEventListener('submit', function(e) {
         }
     }
 
-})
+});
 
 // 카드 팝업의 이미지 변경 or 추가 할때 실행
 cardPopupImgBtn.addEventListener('change', async function(e) {
@@ -469,15 +520,11 @@ cardPopupImgBtn.addEventListener('change', async function(e) {
 
         if(cursor) {
             if(cursor.key === list_idx) {
-
                 const updateData = cursor.value;  
                 
                 updateData.value.forEach( (ele, idx) => {
                     if(ele.card_idx === card_idx) {
-                        const obj = {
-                            ...ele, 
-                            img: src
-                        }
+                        const obj = { ...ele, img: src };
                         cardPopupImg.src = src;
                         cardImgEx(src);
                         updateData.value.splice(idx, 1, obj)
@@ -489,9 +536,8 @@ cardPopupImgBtn.addEventListener('change', async function(e) {
                 requestUpdate.onsuccess = function() {
                     render();
                 }
-
             }
             cursor.continue();
         }
     }
-})
+});
