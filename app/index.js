@@ -1,4 +1,3 @@
-
 const listArr = [];
 let list_idx = 0;
 
@@ -13,11 +12,12 @@ const insertListForm = document.querySelector("#root #insert_list_popup form");
 const insertCardForm = document.querySelector("#root #insert_card_popup form");
 
 const cardPopupImgBtn = document.querySelector("#root #card_popup .insert_img_btn");
+const cardPopupImgDeleteBtn = document.querySelector("#root #card_popup .img_delete");
 const cardPopupImg = document.querySelector("#root #card_popup .photo img");
 const cardPopupContent = document.querySelector("#root #card_popup textarea");
+const cardPopupBtns = document.querySelector("#root #card_popup .btns");
 
 let cardTitleChg = false;
-
 
 window.addEventListener('load', function() {
     const request = indexedDB.open('trello', 1);
@@ -36,6 +36,18 @@ window.addEventListener('load', function() {
 
 });
 
+// 카드 팝업의 이미지 버튼 띄우는 함수
+const cardImgEx = function(src){
+    const imgBtnText = document.querySelector("#root #card_popup .img_btn .img_text");
+    if(src === ""){
+        imgBtnText.innerHTML = '이미지 추가';
+        cardPopupImgDeleteBtn.classList.add('none');
+    } else {
+        imgBtnText.innerHTML = '이미지 변경';
+        cardPopupImgDeleteBtn.classList.remove('none');
+    }
+}
+
 const readonlyList = () => {
     const tx = db.transaction("list", "readonly");
     return tx.objectStore("list");
@@ -45,7 +57,6 @@ const readwriteList = () => {
     const tx = db.transaction("list", "readwrite");
     return tx.objectStore("list");
 };
-
 
 // 팝업 띄우기
 const popupOpen = (popup) => {
@@ -108,7 +119,6 @@ const render = () => {
         }
     }
 };
-
 
 root.addEventListener('click', function(e) {
     // 취소 버튼 클릭시 실행
@@ -180,7 +190,6 @@ root.addEventListener('click', function(e) {
 
         const list_idx = parseInt(card.dataset.listidx);
         const card_idx = parseInt(card.dataset.cardidx);
-
         
         const tList =  readonlyList();
         const request = tList.openCursor();
@@ -195,6 +204,7 @@ root.addEventListener('click', function(e) {
                             card_form.card_idx.value = card_idx;
                             document.querySelector("#root #card_popup .title h3").innerHTML = ele.card_title;
                             cardPopupImg.src = ele.img;
+                            cardImgEx(ele.img);
                             card_form.content.value = ele.card_content;
                         }
                     } )
@@ -205,7 +215,6 @@ root.addEventListener('click', function(e) {
         }
 
     }
-
 
     // 카드 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("card_delete")) {
@@ -241,13 +250,53 @@ root.addEventListener('click', function(e) {
                 cursor.continue();
             }
         };
+        return false;
+    }
 
+    // 카드 팝업의 이미지 삭제 버튼 클릭시 실행
+    if(e.target.classList.contains("img_delete")) {
+        const card_form = e.target.closest("form");
+
+        const list_idx = parseInt(card_form.list_idx.value);
+        const card_idx = parseInt(card_form.card_idx.value);
+
+        const tList = readwriteList();
+        const request = tList.openCursor();
+
+        request.onsuccess = (e) => {
+            const cursor = e.target.result;
+
+            if(cursor) {
+                if(cursor.key === list_idx) {
+
+                    const updateData = cursor.value;  
+                
+                    updateData.value.forEach( (ele, idx) => {
+                        if(ele.card_idx === card_idx) {
+                            const obj = {
+                                ...ele, 
+                                img: ''
+                            }
+                            cardPopupImg.src = '';
+                            updateData.value.splice(idx, 1, obj)
+                        }
+                    } )
+
+                    const requestUpdate = cursor.update(updateData);
+
+                    requestUpdate.onsuccess = function() {
+                        cardImgEx('');
+                        render();
+                    }
+                }
+                cursor.continue();
+            }
+        }
         return false;
     }
 
     // 카드 팝업 제목 클릭시 실행
     if(e.target.classList.contains("card_title")) {
-        const card_popup = e.target.closest("#card_popup");
         const card_form = e.target.closest("form");
 
         cardTitleChg = true;
@@ -302,7 +351,6 @@ root.addEventListener('click', function(e) {
             input.remove();
         }
 
-
         input.addEventListener('keydown', function(e) {
             if(e.key === "Enter"){
                 e.preventDefault();
@@ -319,11 +367,16 @@ root.addEventListener('click', function(e) {
         })
     }
 
+    // 이거 해야 함
+    // 카드 팝업 설명 클릭시 실행
+    if(e.target.classList.contains("card_text_content")) {
+        const card_form = e.target.closest("form");
 
+        // cardTitleChg = true;
 
-
-
-
+        const list_idx = parseInt(card_form.list_idx.value);
+        const card_idx = parseInt(card_form.card_idx.value);
+    }
 })
 
 // 리스트 추가할때 실행
@@ -350,7 +403,6 @@ insertListForm.addEventListener('submit', function(e) {
         popupClose(event.target.closest('.popup'), event.target.closest('form'));
         render();
     }
-
 });
 
 // 카드 추가할때 실행
@@ -378,8 +430,6 @@ insertCardForm.addEventListener('submit', function(e) {
                 updateData.value.push( { card_title: form.title.value, card_content: "설명을 입력해주세요..", card_idx: updateData.count, img: '' } );
                 updateData.count++;
                 
-                // console.log(cursor);
-                // console.log(cursor.key);
                 const request2 = cursor.update(updateData);
                 request2.onsuccess = () => {
                     popupClose(event.target.closest('.popup'), event.target.closest('form'));
@@ -390,62 +440,58 @@ insertCardForm.addEventListener('submit', function(e) {
         }
     }
 
-
 })
 
-
-cardPopupImgBtn.addEventListener('change', function(e) {
-    const card_popup = e.target.closest("#card_popup");
+// 카드 팝업의 이미지 변경 or 추가 할때 실행
+cardPopupImgBtn.addEventListener('change', async function(e) {
     const card_form = e.target.closest("form");
 
     const list_idx = parseInt(card_form.list_idx.value);
     const card_idx = parseInt(card_form.card_idx.value);
+    
+    const imgReader = function(img) {
+        return new Promise( (res) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(img);
+            reader.onload = () => res(reader.result);
+        } )
+    }
 
     const img = this.files[0];
+    const src = await imgReader(img).then( (src) => {return src} );
 
-    const tx = db.transaction("list", "readonly");
+    const tx = db.transaction("list", "readwrite");
     const tList = tx.objectStore("list");
     const request = tList.openCursor();
 
-    // request.onsuccess = (e) => {
-    //     const cursor = e.target.result;
+    request.onsuccess = (e) => {
+        const cursor = e.target.result;
 
-    //     if(cursor) {
-    //         if(cursor.key === parseInt(list_idx)) {
-    //             // let index = 0;
-    //             // console.log(cursor);
-    //             // console.log(cursor.value);
-    //             const updateData = cursor.value;
-    //             // console.log(cursor.key);
+        if(cursor) {
+            if(cursor.key === list_idx) {
 
+                const updateData = cursor.value;  
+                
+                updateData.value.forEach( (ele, idx) => {
+                    if(ele.card_idx === card_idx) {
+                        const obj = {
+                            ...ele, 
+                            img: src
+                        }
+                        cardPopupImg.src = src;
+                        cardImgEx(src);
+                        updateData.value.splice(idx, 1, obj)
+                    }
+                } )
 
-    //             updateData.value.forEach( (ele) => {
-    //                 if(ele.card_idx === card_idx) {
-    //                     // console.log(ele);
-    //                     const reader = new FileReader();
-    //                     reader.readAsDataURL(img);
-    //                     reader.onload = () => {
-    //                         cardPopupImg.src = reader.result;
-    //                         ele.img = reader.result;
+                const requestUpdate = cursor.update(updateData);
 
-                            
-    //                         const request2 = cursor.update(updateData);
-    //                         request2.onsuccess = () => {
-    //                             render();
-    //                         }
-    //                     }
-    //                 }
-    //             } )
-            
-    //         }
+                requestUpdate.onsuccess = function() {
+                    render();
+                }
 
-    //         cursor.continue();
-    //     }
-
-       
-    // }
-
-
+            }
+            cursor.continue();
+        }
+    }
 })
-
-
