@@ -6,6 +6,7 @@ i{color: #000;}
 .flex{display: flex;}
 .none{display: none;}
 
+#root{position: relative;}
 
 .container{padding: 15px 10px; align-items: flex-start;}
 .container .plus{width: 25px; height: 25px; line-height: 21px; text-align: center; font-size: 30px; margin: 0 3px;}
@@ -23,7 +24,7 @@ i{color: #000;}
 .container .list .title i .list_menu div{font-size: 17px; transition: .3s; border-radius: 5px; z-index: 10;}
 .container .list .title i .list_menu div:hover{transition: .3s; background: #000; color: #fff;}
 .container .list .cards{width: 95%; margin: 10px auto; flex-direction: column; gap: 10px;}
-.container .list .cards .card{width: 100%; padding: 5px 10px; flex-direction: column; background: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: .3s;}
+.container .list .cards .card{width: calc(300px/100*95); padding: 5px 10px; flex-direction: column; background: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: .3s;}
 .container .list .cards .card h3{width: 100%; margin: 5px 0; line-height: 35px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .container .list .cards .card .photo{width: 100%; height: 150px;}
 .container .list .cards .card .photo img{width: 100%; height: 100%; object-fit: cover;}

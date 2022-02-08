@@ -5,20 +5,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        .box{width: 100%; height: 100vh; position: relative;}
+        .box2{width: 200px; height: 200px; border: 1px solid #000;}
+        
+    </style>
 </head>
 <body>
-    
+    <div class="box">
+        <div class="box2"></div>
+    </div>
     <script>
-        const arr = [1, 2, 3, 4, 5];
-
-        const array = arr.map( (ele) => {
-            if(ele === 4) {
-                return 6;
-            } else {
-                return ele;
-            }
-        } )
-        console.log(array);
+        window.addEventListener('mousemove', e => {
+            const box = document.querySelector('.box');
+            console.log(e.pageX, e.pageY);
+            box.style.position = 'absolute';
+            box.style.left = e.pageX + 'px';   
+            box.style.top = e.pageY + 'px';   
+            
+        })
 
     </script>
 </body>

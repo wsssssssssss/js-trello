@@ -1,6 +1,3 @@
-let list_idx = 0;
-let db = null;
-
 const root = document.querySelector("#root");
 const container = document.querySelector("#root .container");
 
@@ -15,25 +12,12 @@ const cardPopupImg = document.querySelector("#root #card_popup .photo img");
 const cardPopupContent = document.querySelector("#root #card_popup textarea");
 const cardPopupBtns = document.querySelector("#root #card_popup .btns");
 
+let list_idx = 0;
+let db = null;
+
 let cardTitleChg = false;
 let cardContentChg = false;
-
-window.addEventListener('load', function() {
-    const request = indexedDB.open('trello', 1);
-
-    request.onupgradeneeded = function(e) {
-        db = e.target.result;
-
-        db.createObjectStore("list", {keyPath: "list_idx"});
-    }
-
-    const request2 = indexedDB.open('trello', 1);
-    request2.onsuccess = e => {
-        db = e.target.result;
-        render();
-    }
-
-});
+let cardMove = false;
 
 const cardCreateVar = (e) => {
     const card_form = e.target.closest("form");
@@ -102,9 +86,9 @@ const render = () => {
                     return `
                     <div class="card flex" data-listidx="${cursor.value.list_idx}" data-cardIdx="${card.card_idx}">
                         <div class="photo">
-                            <img src="${card.img}">
+                            <img src="${card.img}" draggable="false">
                         </div>
-                        <h3>${card.card_title}</h3>
+                        <h3 draggable="false">${card.card_title}</h3>
                     </div>`
                 } else {
                     return `
@@ -127,7 +111,10 @@ const render = () => {
     }
 };
 
-root.addEventListener('click', function(e) {
+
+
+
+const handleRootClick = e => {
     // 취소 버튼 클릭시 실행
     if(e.target.classList.contains('close')) {
         popupClose(e.target.closest('.popup'), e.target.closest('form'));
@@ -182,7 +169,7 @@ root.addEventListener('click', function(e) {
     }
 
     // 카드 클릭시 실행
-    if(e.target.closest(".card")) {
+    if(e.target.closest(".card") && !cardMove) {
         const card_popup = document.querySelector("#card_popup");
         const card_form = document.querySelector("#card_popup form");
         const card = e.target.closest(".card");
@@ -302,8 +289,6 @@ root.addEventListener('click', function(e) {
         const card_title = e.target;
         const title = e.target.innerText;
 
-        console.log(list_idx, card_idx);
-
         cardTitleChg = true;
 
         input.classList.toggle('none');
@@ -313,7 +298,6 @@ root.addEventListener('click', function(e) {
         input.focus();
         
         const titleChangeFunc = () => {
-            console.log("titleChangeFunc");
             input.classList.toggle('none');
             card_title.classList.toggle('none');
             cardTitleChg = false;
@@ -408,7 +392,7 @@ root.addEventListener('click', function(e) {
                 }
             }
         }
-  
+
         input.addEventListener('keydown', function(e) {
             if(e.key === "Enter"){
                 e.preventDefault();
@@ -426,21 +410,16 @@ root.addEventListener('click', function(e) {
 
         return false;
     }
-});
 
 
-root.addEventListener('dragstart', function(e) {
-    console.log(e);  
-    // if(e.target.classList.contains('card')){
-    //     console.log(1);
-    // }
-})
+}
 
-// 리스트 추가할때 실행
-insertListForm.addEventListener('submit', function(e) {
+
+
+const onListSbm = e => {
     e.preventDefault();
     const event = e;
-    const title = this.title.value;
+    const title = e.currentTarget.title.value;
 
     const tList = readwriteList();
     const request = tList.openCursor(null, "prev");
@@ -454,18 +433,18 @@ insertListForm.addEventListener('submit', function(e) {
         popupClose(event.target.closest('.popup'), event.target.closest('form'));
         render();
     }
-});
+}
 
-// 카드 추가할때 실행
-insertCardForm.addEventListener('submit', function(e) {
+
+const onCardSbm = e => {
     e.preventDefault();
-    const form = this;
+    const form = e.currentTarget;
     const event = e;
-    const list_idx = this.list_idx.value;
+    const list_idx = e.currentTarget.list_idx.value;
 
-    if(this.title.value === ""){
+    if(e.currentTarget.title.value === ""){
         alert("카드 내용을 입력해주세요");
-        this.title.focus();
+        e.currentTarget.title.focus();
         return;
     }
 
@@ -490,11 +469,11 @@ insertCardForm.addEventListener('submit', function(e) {
             cursor.continue();
         }
     }
+}
 
-});
 
-// 카드 팝업의 이미지 변경 or 추가 할때 실행
-cardPopupImgBtn.addEventListener('change', async function(e) {
+
+const onChgCardImg = async e => {
     const card_form = e.target.closest("form");
 
     const list_idx = parseInt(card_form.list_idx.value);
@@ -508,7 +487,7 @@ cardPopupImgBtn.addEventListener('change', async function(e) {
         } )
     }
 
-    const img = this.files[0];
+    const img = e.currentTarget.files[0];
     const src = await imgReader(img).then( (src) => {return src} );
 
     const tx = db.transaction("list", "readwrite");
@@ -540,4 +519,101 @@ cardPopupImgBtn.addEventListener('change', async function(e) {
             cursor.continue();
         }
     }
-});
+}
+
+// const pos = {
+//     xPos: 0, 
+//     yPos: 0,
+// }
+
+// let nowCard = undefined;
+// let card_layerX = 0;
+// let card_layerY = 0;
+
+// window.addEventListener('mousedown', e => {
+//     if(e.target.closest('.card')) {
+//         nowCard = e.target.closest('.card');
+        
+//         pos.xPos = e.pageX;
+//         pos.yPos = e.pageY;
+
+//         card_layerX = e.layerX;
+//         card_layerY = e.layerY;
+
+//         nowCard.style.position = 'absolute';
+//         nowCard.style.zIndex = 99;
+//         nowCard.style.left = `${pos.xPos - card_layerX}px`;
+//         nowCard.style.top = `${pos.yPos - card_layerY}px`;
+//     }
+// })
+
+// window.addEventListener('mousemove', e => {
+//     cardMove = true;
+//     const Xpos = e.pageX - pos.xPos;
+//     const Ypos = e.pageY - pos.yPos;
+
+//     nowCard.style.left = `${pos.xPos + Xpos - card_layerX}px`;
+//     nowCard.style.top = `${pos.yPos + Ypos - card_layerY}px`;
+//     // console.log('move');
+//     if(e.target.closest('.cards')){
+//         // console.log(e.target.closest('.cards'));
+//     }
+// })
+
+// window.addEventListener('mouseup', e => {
+    
+//     setTimeout( _ => {
+//         nowCard.style.removeProperty('position');
+//         nowCard.style.zIndex = 0;
+//         nowCard.style.removeProperty('left');
+//         nowCard.style.removeProperty('top');
+        
+//         pos.xPos = 0;
+//         pos.yPos = 0;
+        
+//         card_layerX = 0;
+//         card_layerY = 0;
+//         cardMove = false; 
+//         nowCard = undefined;
+//     }, 100)
+// })
+
+
+
+
+// 모든 클릭 이벤트에 대한 이벤트 핸들러
+root.addEventListener('click', handleRootClick);
+
+// 리스트 추가할때 실행
+insertListForm.addEventListener('submit', onListSbm);
+
+// 카드 추가할때 실행
+insertCardForm.addEventListener('submit', onCardSbm);
+
+// 카드 팝업의 이미지 변경 or 추가 할때 실행
+cardPopupImgBtn.addEventListener('change', onChgCardImg);
+
+
+// root.addEventListener('dragstart', function(e) {
+//     console.log(e);  
+//     // if(e.target.classList.contains('card')){
+//     //     console.log(1);
+//     // }
+// })
+
+
+window.onload = _ => {
+    const request = indexedDB.open('trello', 1);
+
+    request.onupgradeneeded = function(e) {
+        db = e.target.result;
+        db.createObjectStore("list", {keyPath: "list_idx"});
+    }
+
+    const request2 = indexedDB.open('trello', 1);
+    request2.onsuccess = e => {
+        db = e.target.result;
+        render();
+    }
+
+}
