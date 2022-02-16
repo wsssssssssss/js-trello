@@ -1,6 +1,5 @@
 const root = document.querySelector("#root");
 const container = document.querySelector("#root .container");
-
 const popup = document.querySelectorAll("#root .popup");
 
 const insertListForm = document.querySelector("#root #insert_list_popup form");
@@ -14,10 +13,8 @@ const cardPopupBtns = document.querySelector("#root #card_popup .btns");
 
 let list_idx = 0;
 let db = null;
-
 let cardTitleChg = false;
 let cardContentChg = false;
-let cardMove = false;
 
 const cardCreateVar = (e) => {
     const card_form = e.target.closest("form");
@@ -26,6 +23,25 @@ const cardCreateVar = (e) => {
 
     return { card_form, list_idx, card_idx };
 }
+
+const readonlyList = () => {
+    const tx = db.transaction("list", "readonly");
+    return tx.objectStore("list");
+};
+
+const readwriteList = () => {
+    const tx = db.transaction("list", "readwrite");
+    return tx.objectStore("list");
+};
+
+const OpenCursor = (str) => {
+    if(str === 'only') {
+        return readonlyList().openCursor();
+    } else if(str === 'write') {
+        return readwriteList().openCursor();
+    }
+};
+
 
 // 카드 팝업의 이미지 버튼 띄우는 함수
 const cardImgEx = function(src){
@@ -38,16 +54,6 @@ const cardImgEx = function(src){
         cardPopupImgDeleteBtn.classList.remove('none');
     }
 }
-
-const readonlyList = () => {
-    const tx = db.transaction("list", "readonly");
-    return tx.objectStore("list");
-};
-
-const readwriteList = () => {
-    const tx = db.transaction("list", "readwrite");
-    return tx.objectStore("list");
-};
 
 // 팝업 띄우기
 const popupOpen = (popup) => {
@@ -67,11 +73,10 @@ const render = () => {
         }
     } )
 
-    const tList = readonlyList();
-    const request = tList.openCursor();
+    const request = OpenCursor('only');
+
     request.onsuccess = (e) => {
         const cursor = e.target.result;
-
         if(cursor) {
             const list = document.createElement('div');
             list.classList.add('list');
@@ -80,7 +85,7 @@ const render = () => {
               <h3>${cursor.value.title}</h3>
               <div class="menu"> <i class="fa fa-chevron-down" data-listidx="${cursor.value.list_idx}"></i> </div>
             </div>
-            <div class="cards flex">
+            <div class="cards flex" data-listidx="${cursor.value.list_idx}">
             ${cursor.value.value.map( (card) => {
                 if(card.img !== '') {
                     return `
@@ -105,13 +110,10 @@ const render = () => {
             </div>
             `;
             document.querySelector("#root .container .add_list").before(list);
-
             cursor.continue();
         }
     }
 };
-
-
 
 
 const handleRootClick = e => {
@@ -169,23 +171,26 @@ const handleRootClick = e => {
     }
 
     // 카드 클릭시 실행
-    if(e.target.closest(".card") && !cardMove) {
+    if(e.target.closest(".card")) {
         const card_popup = document.querySelector("#card_popup");
         const card_form = document.querySelector("#card_popup form");
         const card = e.target.closest(".card");
         popupOpen(card_popup);
 
+        
         const list_idx = parseInt(card.dataset.listidx);
         const card_idx = parseInt(card.dataset.cardidx);
-        
-        const tList =  readonlyList();
-        const request = tList.openCursor();
+        console.log(card_idx);
+
+        const request = OpenCursor('only');
         request.onsuccess = e => {
             const cursor = e.target.result;
-
             if(cursor) {
                 if(cursor.key === list_idx) {
+                    // console.log(cursor);
                     cursor.value.value.forEach( (ele) => {
+                        // console.log('카드 클릭시: ' + ele.card_idx);
+                        // console.log(ele);
                         if(ele.card_idx === card_idx) {
                             card_form.list_idx.value = list_idx;
                             card_form.card_idx.value = card_idx;
@@ -194,6 +199,7 @@ const handleRootClick = e => {
                             cardImgEx(ele.img);
                             card_form.content[0].innerText = ele.card_content;
                             card_form.content[1].value = ele.card_content;
+                            console.log(card_form);
                         }
                     } )
                 }
@@ -208,68 +214,50 @@ const handleRootClick = e => {
     // 카드 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("card_delete")) {
         const card_popup = e.target.closest("#card_popup");
-
         const { card_form, list_idx, card_idx } = cardCreateVar(e);
-
-        const tList = readwriteList();
-        const request = tList.openCursor();
+        const request = OpenCursor('write');
 
         request.onsuccess = (e) => {
             const cursor = e.target.result;
-            
             if(cursor) {
                 if(cursor.key === list_idx && confirm("카드를 삭제 하시겠습니까?")) {
                     const updateData = cursor.value;
-                    
                     updateData.value.forEach( (ele, idx) => {
                         if(ele.card_idx === card_idx) {
                             updateData.value.splice(idx, 1);
                         }
                     } )
-
                     const request2 = cursor.update(updateData);
                     request2.onsuccess = () => {
                         popupClose(card_popup, card_form);
                         render();
                     }
                 }
-
                 cursor.continue();
             }
         };
-
         return false;
     }
 
     // 카드 팝업의 이미지 삭제 버튼 클릭시 실행
     if(e.target.classList.contains("img_delete")) {
         const { card_form, list_idx, card_idx } = cardCreateVar(e);
-
-        const tList = readwriteList();
-        const request = tList.openCursor();
+        const request = OpenCursor('write');
 
         request.onsuccess = (e) => {
             const cursor = e.target.result;
-
             if(cursor) {
                 if(cursor.key === list_idx) {
-
                     const updateData = cursor.value;  
-                
                     updateData.value.forEach( (ele, idx) => {
                         if(ele.card_idx === card_idx) {
-                            const obj = {
-                                ...ele, 
-                                img: ''
-                            }
+                            const obj = { ...ele, img: '' };
                             cardPopupImg.src = '';
                             updateData.value.splice(idx, 1, obj)
                         }
                     } )
-
                     const requestUpdate = cursor.update(updateData);
-
-                    requestUpdate.onsuccess = function() {
+                    requestUpdate.onsuccess = () => {
                         cardImgEx('');
                         render();
                     }
@@ -277,37 +265,31 @@ const handleRootClick = e => {
                 cursor.continue();
             }
         }
-
         return false;
     }
 
     // 카드 팝업 제목 클릭시 실행
     if(e.target.classList.contains("card_title")) {
         const { card_form, list_idx, card_idx } = cardCreateVar(e);
-
         const input = document.querySelector("#card_popup .title input");
         const card_title = e.target;
         const title = e.target.innerText;
 
         cardTitleChg = true;
-
         input.classList.toggle('none');
         card_title.classList.toggle('none');
         input.value = title;
-
         input.focus();
-        
+
         const titleChangeFunc = () => {
             input.classList.toggle('none');
             card_title.classList.toggle('none');
             cardTitleChg = false;
 
-            const tList = readwriteList();
-            const request = tList.openCursor();
+            const request = OpenCursor('write');
 
             request.onsuccess = (e) => {
                 const cursor = e.target.result;
-
                 if(cursor){
                     if(cursor.key === list_idx) {
                         const updateData = cursor.value;
@@ -343,35 +325,29 @@ const handleRootClick = e => {
                 titleChangeFunc(); 
             }
         })
-
         return false;
     }
 
     // 카드 팝업 설명 클릭시 실행
     if(e.target.classList.contains("card_text_content")) {
         const { card_form, list_idx, card_idx } = cardCreateVar(e);
-
         const input = document.querySelector("#card_popup .text_content input");
         const textarea = e.target;
 
         cardContentChg = true;
-
         textarea.classList.toggle('none');
         input.classList.toggle('none');
         input.focus();
-
 
         const contentChangeFunc = () => {
             textarea.classList.toggle('none');
             input.classList.toggle('none');
             cardContentChg = false;
 
-            const tList = readwriteList();
-            const request = tList.openCursor();
+            const request = OpenCursor('write');
 
             request.onsuccess = (e) => {
                 const cursor = e.target.result;
-
                 if(cursor){
                     if(cursor.key === list_idx) {
                         const updateData = cursor.value;
@@ -385,7 +361,7 @@ const handleRootClick = e => {
 
                         const requestUpdate = cursor.update(updateData);
                         requestUpdate.onsuccess = () => {
-                            render();
+                            // render();
                         }
                     }
                     cursor.continue();
@@ -407,34 +383,26 @@ const handleRootClick = e => {
                 contentChangeFunc(); 
             }
         })
-
         return false;
     }
-
-
 }
-
-
 
 const onListSbm = e => {
     e.preventDefault();
     const event = e;
     const title = e.currentTarget.title.value;
-
     const tList = readwriteList();
     const request = tList.openCursor(null, "prev");
 
     request.onsuccess = e => {
         const cursor = e.target.result;
         list_idx = cursor ? cursor.value.list_idx + 1 : 0;
-
         tList.add( { title, list_idx, count: 0, value: [] } );
     
         popupClose(event.target.closest('.popup'), event.target.closest('form'));
         render();
     }
 }
-
 
 const onCardSbm = e => {
     e.preventDefault();
@@ -448,8 +416,7 @@ const onCardSbm = e => {
         return;
     }
 
-    const tList = readwriteList();
-    const request = tList.openCursor();
+    const request = OpenCursor('write');
 
     request.onsuccess = (e) => {
         const cursor = e.target.result;
@@ -471,36 +438,30 @@ const onCardSbm = e => {
     }
 }
 
-
-
 const onChgCardImg = async e => {
     const card_form = e.target.closest("form");
-
     const list_idx = parseInt(card_form.list_idx.value);
     const card_idx = parseInt(card_form.card_idx.value);
     
-    const imgReader = function(img) {
+    const imgReader = (img) => {
         return new Promise( (res) => {
             const reader = new FileReader();
             reader.readAsDataURL(img);
             reader.onload = () => res(reader.result);
         } )
-    }
+    };
 
     const img = e.currentTarget.files[0];
     const src = await imgReader(img).then( (src) => {return src} );
 
-    const tx = db.transaction("list", "readwrite");
-    const tList = tx.objectStore("list");
+    const tList = readwriteList();
     const request = tList.openCursor();
-
     request.onsuccess = (e) => {
         const cursor = e.target.result;
-
         if(cursor) {
             if(cursor.key === list_idx) {
                 const updateData = cursor.value;  
-                
+
                 updateData.value.forEach( (ele, idx) => {
                     if(ele.card_idx === card_idx) {
                         const obj = { ...ele, img: src };
@@ -521,64 +482,175 @@ const onChgCardImg = async e => {
     }
 }
 
-// const pos = {
-//     xPos: 0, 
-//     yPos: 0,
-// }
+const mousePos = {};
+const cardInfo = {};
+let cardCho = false;
+let mouseMove = false;
 
-// let nowCard = undefined;
-// let card_layerX = 0;
-// let card_layerY = 0;
+let cloneCard = undefined;
 
-// window.addEventListener('mousedown', e => {
-//     if(e.target.closest('.card')) {
-//         nowCard = e.target.closest('.card');
+const cardPla = document.createElement('div');
+cardPla.className = 'cardPla';
+
+window.addEventListener('mousedown', e => {
+    if(!e.target.closest('.card')) {
+        return false;
+    }
+
+    const card = e.target.closest('.card');
+    const cardRect = card.getBoundingClientRect();
+    cardCho = true;
+    mouseMove = false;
+
+    Object.assign(mousePos, {
+        x: e.pageX, 
+        y: e.pageY
+    });
+
+    Object.assign(cardInfo, {
+        layerX: e.pageX - cardRect.left,
+        layerY: e.pageY - cardRect.top,
+        width: card.clientWidth,
+        height: card.clientHeight
+    });
+
+    cardPla.style.width = cardInfo.width + 'px';
+    cardPla.style.height = cardInfo.height + 'px';
+
+    cloneCard = card.cloneNode(true);
+
+    Object.assign(cloneCard.style, {
+        position: 'fixed',
+        width: card.clientWidth + 'px',
+        height: card.clientHeight + 'px',
+        left: cardRect.left + 'px',
+        top: cardRect.top + 'px',
+        zIndex: 999
+    });
+
+    card.parentElement.insertBefore(cardPla, card);
+    card.remove();
+
+    document.body.appendChild(cloneCard);
+})
+
+window.addEventListener('mousemove', e => {
+    if(!cardCho) {
+        return false;
+    };
+    mouseMove = true;
+
+    Object.assign(mousePos, {
+        x: e.pageX,
+        y: e.pageY
+    });
+
+    Object.assign(cloneCard.style, {
+        left: e.pageX - cardInfo.layerX + 'px',
+        top: e.pageY - cardInfo.layerY + 'px'
+    });
+
+    Array.from(document.querySelectorAll("#root .list")).some( list => {
+        const listRect = list.getBoundingClientRect();
         
-//         pos.xPos = e.pageX;
-//         pos.yPos = e.pageY;
+        if(listRect.left < mousePos.x && mousePos.x < listRect.left + list.clientWidth) {
+            const cards = list.children[1];
+            const isAddPla = Array.from(cards.children).filter(({classList}) => classList.contains('card')).some(card => {
+                const cardRect = card.getBoundingClientRect();
+            
+                if(mousePos.y < cardRect.top + card.clientHeight / 2) {
+                    cardPla.remove();
+                    cards.insertBefore(cardPla, card);
 
-//         card_layerX = e.layerX;
-//         card_layerY = e.layerY;
+                    return true;
+                }
+            });
 
-//         nowCard.style.position = 'absolute';
-//         nowCard.style.zIndex = 99;
-//         nowCard.style.left = `${pos.xPos - card_layerX}px`;
-//         nowCard.style.top = `${pos.yPos - card_layerY}px`;
-//     }
-// })
+            if(!isAddPla) {
+                cardPla.remove();
+                cards.appendChild(cardPla);
+            }
 
-// window.addEventListener('mousemove', e => {
-//     cardMove = true;
-//     const Xpos = e.pageX - pos.xPos;
-//     const Ypos = e.pageY - pos.yPos;
+            return true;
+        }
+    } );
 
-//     nowCard.style.left = `${pos.xPos + Xpos - card_layerX}px`;
-//     nowCard.style.top = `${pos.yPos + Ypos - card_layerY}px`;
-//     // console.log('move');
-//     if(e.target.closest('.cards')){
-//         // console.log(e.target.closest('.cards'));
-//     }
-// })
+})
 
-// window.addEventListener('mouseup', e => {
+window.addEventListener('mouseup', e => {
     
-//     setTimeout( _ => {
-//         nowCard.style.removeProperty('position');
-//         nowCard.style.zIndex = 0;
-//         nowCard.style.removeProperty('left');
-//         nowCard.style.removeProperty('top');
-        
-//         pos.xPos = 0;
-//         pos.yPos = 0;
-        
-//         card_layerX = 0;
-//         card_layerY = 0;
-//         cardMove = false; 
-//         nowCard = undefined;
-//     }, 100)
-// })
+    if(cardCho) {
+        cardCho = false;
 
+        const list_idx = parseInt(cloneCard.dataset.listidx);
+        const card_idx = parseInt(cloneCard.dataset.cardidx);
+        const prevEle = cardPla.previousElementSibling;
+        let prevList_idx = prevEle ? parseInt(prevEle.dataset.listidx) : parseInt(cardPla.parentElement.dataset.listidx);
+        let prevCard_idx = prevEle ? parseInt(prevEle.dataset.cardidx) : undefined;
 
+        const request = OpenCursor('write');
+        request.onsuccess = e => {
+            const cursor = e.target.result;
+            if(cursor) {
+                if(cursor.key === list_idx){
+                    const updateData = cursor.value;
+                    let updateVal;
+
+                    updateData.value.forEach( (ele, idx) => {
+                        if(ele.card_idx === card_idx) {
+                            updateVal = ele;
+                            updateData.value.splice(idx, 1);
+                        }
+                    } )
+
+                    const updateRequest = cursor.update(updateData);
+
+                    updateRequest.onsuccess = _ => {
+                        const request2 = OpenCursor('write');
+                        request2.onsuccess = e => {
+                            const cursor = e.target.result;
+                            if(cursor) {
+                                if(cursor.key === prevList_idx) {
+                                    const updateData2 = cursor.value;
+
+                                    if(prevCard_idx !== undefined) {
+                                        updateData2.value.forEach( (ele, idx) => {
+                                            if(ele.card_idx === prevCard_idx){
+                                                updateData2.value.splice(idx+1, 0, {... updateVal, card_idx: updateData2.count});
+                                                console.log(updateData2.count);
+                                                updateData2.count++;
+                                            }
+                                        } )
+                                    } else {
+                                        updateData2.value.splice(0, 0, {... updateVal, card_idx: updateData2.count});
+                                        updateData2.count++;
+                                    }
+
+                                    const updateRequest2 = cursor.update(updateData2);
+                                    updateRequest2.onsuccess = _ => {
+                                        render();
+                                    }
+                                }
+                                cursor.continue();
+                            }
+                        }
+                    }
+                }
+                cursor.continue();
+            }
+
+        }
+        cloneCard.remove();
+        cloneCard.removeAttribute('style');
+        cardPla.parentElement.insertBefore(cloneCard, cardPla);
+        if(!mouseMove){
+            cloneCard.click();
+        }
+        cloneCard = undefined;
+        cardPla.remove();
+    }
+    
+})
 
 
 // 모든 클릭 이벤트에 대한 이벤트 핸들러
@@ -593,15 +665,6 @@ insertCardForm.addEventListener('submit', onCardSbm);
 // 카드 팝업의 이미지 변경 or 추가 할때 실행
 cardPopupImgBtn.addEventListener('change', onChgCardImg);
 
-
-// root.addEventListener('dragstart', function(e) {
-//     console.log(e);  
-//     // if(e.target.classList.contains('card')){
-//     //     console.log(1);
-//     // }
-// })
-
-
 window.onload = _ => {
     const request = indexedDB.open('trello', 1);
 
@@ -615,5 +678,4 @@ window.onload = _ => {
         db = e.target.result;
         render();
     }
-
-}
+};
