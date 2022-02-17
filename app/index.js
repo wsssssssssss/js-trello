@@ -180,7 +180,7 @@ const handleRootClick = e => {
         
         const list_idx = parseInt(card.dataset.listidx);
         const card_idx = parseInt(card.dataset.cardidx);
-        console.log(card_idx);
+        // console.log(card_idx);
 
         const request = OpenCursor('only');
         request.onsuccess = e => {
@@ -485,20 +485,21 @@ const onChgCardImg = async e => {
 const mousePos = {};
 const cardInfo = {};
 let cardCho = false;
-let mouseMove = false;
-
 let cloneCard = undefined;
+
+let mouseMove = false;
+let nowCard = undefined;
 
 const cardPla = document.createElement('div');
 cardPla.className = 'cardPla';
 
-window.addEventListener('mousedown', e => {
+const dragMuDownhandle = e => {
     if(!e.target.closest('.card')) {
         return false;
     }
 
-    const card = e.target.closest('.card');
-    const cardRect = card.getBoundingClientRect();
+    nowCard = e.target.closest('.card');
+    const cardRect = nowCard.getBoundingClientRect();
     cardCho = true;
     mouseMove = false;
 
@@ -510,31 +511,31 @@ window.addEventListener('mousedown', e => {
     Object.assign(cardInfo, {
         layerX: e.pageX - cardRect.left,
         layerY: e.pageY - cardRect.top,
-        width: card.clientWidth,
-        height: card.clientHeight
+        width: nowCard.clientWidth,
+        height: nowCard.clientHeight
     });
 
     cardPla.style.width = cardInfo.width + 'px';
     cardPla.style.height = cardInfo.height + 'px';
 
-    cloneCard = card.cloneNode(true);
+    cloneCard = nowCard.cloneNode(true);
 
     Object.assign(cloneCard.style, {
         position: 'fixed',
-        width: card.clientWidth + 'px',
-        height: card.clientHeight + 'px',
+        width: nowCard.clientWidth + 'px',
+        height: nowCard.clientHeight + 'px',
         left: cardRect.left + 'px',
         top: cardRect.top + 'px',
         zIndex: 999
     });
 
-    card.parentElement.insertBefore(cardPla, card);
-    card.remove();
+    nowCard.parentElement.insertBefore(cardPla, nowCard);
+    nowCard.style.display = 'none';
 
     document.body.appendChild(cloneCard);
-})
+};
 
-window.addEventListener('mousemove', e => {
+const dragMuMoveHandle = e => {
     if(!cardCho) {
         return false;
     };
@@ -574,19 +575,31 @@ window.addEventListener('mousemove', e => {
             return true;
         }
     } );
+};
 
-})
+const dragMuUpHandle = e => {
+    if(cardCho && !mouseMove){
+        cardCho = false;
+        nowCard.style.display = 'block';
+        nowCard.click();
+        nowCard = undefined;
+        cloneCard.remove();
+        cloneCard.removeAttribute('style');
+        cloneCard = undefined;
+        cardPla.remove();
+    } else if (cardCho && mouseMove) {
 
-window.addEventListener('mouseup', e => {
-    
-    if(cardCho) {
+        nowCard.remove();
+        nowCard = undefined;
         cardCho = false;
 
         const list_idx = parseInt(cloneCard.dataset.listidx);
         const card_idx = parseInt(cloneCard.dataset.cardidx);
         const prevEle = cardPla.previousElementSibling;
+
         let prevList_idx = prevEle ? parseInt(prevEle.dataset.listidx) : parseInt(cardPla.parentElement.dataset.listidx);
         let prevCard_idx = prevEle ? parseInt(prevEle.dataset.cardidx) : undefined;
+
 
         const request = OpenCursor('write');
         request.onsuccess = e => {
@@ -602,6 +615,7 @@ window.addEventListener('mouseup', e => {
                             updateData.value.splice(idx, 1);
                         }
                     } )
+                    
 
                     const updateRequest = cursor.update(updateData);
 
@@ -612,12 +626,10 @@ window.addEventListener('mouseup', e => {
                             if(cursor) {
                                 if(cursor.key === prevList_idx) {
                                     const updateData2 = cursor.value;
-
                                     if(prevCard_idx !== undefined) {
                                         updateData2.value.forEach( (ele, idx) => {
                                             if(ele.card_idx === prevCard_idx){
                                                 updateData2.value.splice(idx+1, 0, {... updateVal, card_idx: updateData2.count});
-                                                console.log(updateData2.count);
                                                 updateData2.count++;
                                             }
                                         } )
@@ -638,19 +650,22 @@ window.addEventListener('mouseup', e => {
                 }
                 cursor.continue();
             }
-
         }
         cloneCard.remove();
         cloneCard.removeAttribute('style');
         cardPla.parentElement.insertBefore(cloneCard, cardPla);
-        if(!mouseMove){
-            cloneCard.click();
-        }
         cloneCard = undefined;
         cardPla.remove();
     }
-    
-})
+};
+
+
+// drag 이벤트 핸들러들
+window.addEventListener('mousedown', dragMuDownhandle);
+
+window.addEventListener('mousemove', dragMuMoveHandle);
+
+window.addEventListener('mouseup', dragMuUpHandle);
 
 
 // 모든 클릭 이벤트에 대한 이벤트 핸들러
