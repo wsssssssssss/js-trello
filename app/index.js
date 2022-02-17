@@ -180,17 +180,13 @@ const handleRootClick = e => {
         
         const list_idx = parseInt(card.dataset.listidx);
         const card_idx = parseInt(card.dataset.cardidx);
-        // console.log(card_idx);
 
         const request = OpenCursor('only');
         request.onsuccess = e => {
             const cursor = e.target.result;
             if(cursor) {
                 if(cursor.key === list_idx) {
-                    // console.log(cursor);
                     cursor.value.value.forEach( (ele) => {
-                        // console.log('카드 클릭시: ' + ele.card_idx);
-                        // console.log(ele);
                         if(ele.card_idx === card_idx) {
                             card_form.list_idx.value = list_idx;
                             card_form.card_idx.value = card_idx;
@@ -199,11 +195,9 @@ const handleRootClick = e => {
                             cardImgEx(ele.img);
                             card_form.content[0].innerText = ele.card_content;
                             card_form.content[1].value = ele.card_content;
-                            console.log(card_form);
                         }
                     } )
                 }
-
                 cursor.continue();
             }
         }
