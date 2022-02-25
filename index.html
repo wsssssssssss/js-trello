@@ -1,19 +1,106 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Trello"
-    />
-    <link rel="stylesheet" href="./css/style.css">
-    <title>Trello</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <script src="app/index.js"></script>
-  </body>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Trello" />
+  <link rel="stylesheet" href="./css/style.css">
+  <title>Trello</title>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root">
+    <div class="board flex">
+      <div class="listContainer flex">
+        <div class="list">
+          <div class="listFlex flex">
+            <div class="listTitle">listTitle</div>
+            <div class="listMenu">...</div>
+          </div>
+          <div class="cardFlex flex">
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+            <div class="card">
+              <img src="img.jpg" alt="img">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+          </div>
+          <div class="addCardFlex flex">
+            <div class="addCard">+ Add a card</div>
+            <div class="addImg">ㅁ</div>
+          </div>
+        </div>
+        <div class="list">
+          <div class="listFlex flex">
+            <div class="listTitle">listTitle</div>
+            <div class="listMenu">...</div>
+          </div>
+          <div class="cardFlex flex">
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+            <div class="card">
+              <div class="cardTitle">cardTitle</div>
+            </div>
+          </div>
+          <div class="addCardFlex flex">
+            <div class="addCard">+ Add a card</div>
+            <div class="addImg">ㅁ</div>
+          </div>
+        </div>
+        <div class="list">
+        </div>
+      </div>
+      <div class="addList">+ Add another list</div>
+    </div>
+  </div>
+  <div class="listPopup none">
+    <div>
+      <div>리스트 제목입력</div>
+      <input type="text">
+      <button>확인</button>
+    </div>
+  </div>
+  <div class="cardTitlePopup none">
+    <div>
+      <div>카드 제목입력</div>
+      <input type="text">
+      <button>확인</button>
+    </div>
+  </div>
+  <div class="cardPopup none">
+    <div class="popup">
+      <div class="popupTitle">cardTitle</div>
+      <div class="popupImg">
+        <img src="img.jpg" alt="img">
+        <div class="addImgP none">이미지 추가</div>
+        <div class="imgBtn flex">
+          <button>이미지 변경</button>
+          <button>이미지 제거</button>
+        </div>
+      </div>
+      <div class="content">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Dolorem perspiciatis ea fuga nobis
+        deleniti facilis optio est libero aperiam sunt?</div>
+      <div class="cardBtn flex">
+        <button>삭제</button>
+        <button>닫기</button>
+      </div>
+    </div>
+  </div>
+  <script src="app/index.js"></script>
+</body>
+
 </html>
