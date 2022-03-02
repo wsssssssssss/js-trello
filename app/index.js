@@ -75,8 +75,8 @@ const onBase64File = (file, db) =>{
     let result = reader.result;
     img.src = result;
     if(db){
-      // DBCardModify 수정중 
-      DBCardModify(cardView_popupWrap.dataset.card, 'image', result);
+      // DBModify 수정중 
+      DBModify(cardView_popupWrap.dataset.card, 'image', result);
     }
 
     return result;
@@ -85,18 +85,21 @@ const onBase64File = (file, db) =>{
 };
 
 const elementChange = (target, keyName) => {
+  let key =  cardView_popupWrap.classList.contains("none") ? target.closest(".list").dataset.list : cardView_popupWrap.dataset.card;
+  // console.log(key)
   target.remove();
   let input =  createEl('input');
   input.setAttribute('type', 'text');
   input.setAttribute('value', target.innerText);
   input.addEventListener("keydown", e => {
     if(window.event.keyCode === 13){
-      DBCardModify(cardView_popupWrap.dataset.card, keyName, input.value);
+      console.log(key)
+      DBModify(key, keyName, input.value, cardView_popupWrap.classList.contains("none") ? "trello__list" : undefined);
       input.blur();
     }
   });
   input.addEventListener("blur", e => {
-    DBCardModify(cardView_popupWrap.dataset.card, keyName, input.value);
+    DBModify(key, keyName, input.value, cardView_popupWrap.classList.contains("none") ? "trello__list" : undefined);
   });
   return input;
 };
@@ -122,20 +125,21 @@ const addCard = (listDataSet, cardTitle, cardImg) => {
   listDataSet = parseInt(listDataSet);
   let list = document.querySelector(`.list[data-list='${listDataSet}'`);
   if(list){
+    if(cardTitle !== ''){
+    // console.log(cardImg); 
     list.childNodes[5].childNodes[3].innerHTML += cardImg === '' ? `<div class="card" data-card="${cardCnt}"><p class="cardTitle" data-card="${cardCnt}">${cardTitle}</p></div>` : `<div class="card" data-card="${cardCnt}"><img data-card="${cardCnt}" src="${cardImg}" alt="card__img" class="card__img" id="card__add--img"><p class="cardTitle" data-card="${cardCnt}">${cardTitle}</p></div>`;
     image.src = '';
     card_cardForm.reset();
     cardCnt++;
+    }
   }
 };
   
 const addCardListener = () => {
-    if(cardTitle !== ''){
       card_popupWrap.classList.toggle("none");
       let card_title = card_cardForm.card.value;
       DBAdd('trello__card', targetListNum, card_title, image.src.includes('noimage') ? '' : image.src    , '');
       addCard(targetListNum, card_title, image.src.includes('noimage') ? '' : image.src);
-    }
 };
 
 // DB METHOD
@@ -163,7 +167,6 @@ const DBAdd = (tableName, dataSet, title, image, content) => {
   const tx = db.transaction(tableName, "readwrite");
   tx.onerror = e => console.log(`Error! ${e.target.error}`);
   const table = tx.objectStore(tableName);
-  console.log( data);
   table.add(data);
 };
 
@@ -203,11 +206,12 @@ const DBDeleteCard = (key) => {
   };
   
 
-const DBCardModify = (key, name, value) => {
+const DBModify = (key, name, value, dbName = "trello__card") => {
+  console.log(key)
   key = parseInt(key);
   const request = indexedDB.open('Trello', 1);
   request.onsuccess = e => {
-    let objectStore = db.transaction("trello__card", "readwrite").objectStore("trello__card");
+    let objectStore = db.transaction(dbName, "readwrite").objectStore(dbName);
     let request = objectStore.get(key);
     request.onsuccess = e => {
       let data = e.target.result;
@@ -219,16 +223,18 @@ const DBCardModify = (key, name, value) => {
 
       if(name === 'title') {
         data.title = value;
-        card.innerText = value;
+        dbName === "trello__list" ? false : card.innerText = value;
       }
       if(name === 'image'){
         if(!card.childNodes[1]){
           let img = createEl('img');
-          img.src = value;
           img.classList.add('card__img');
-          cardView_listModifyForm.childNodes[9].innerHTML = `<label  class="card_btn card_btn1" for="cardViewopenFile">이미지 수정</label> <button class="card_btn card_btn2">이미지 삭제</button>`;
+          listClear();
+          render('trello__card');
+          cardView_listModifyForm.childNodes[9].innerHTML = `<label  class="card_btn card_btn1 " for="cardViewopenFile">이미지 수정</label> <button class="card_btn card_btn2">이미지 삭제</button>`;
         }
         else card.childNodes[0].src = value;
+        console.log(value)
         data.image = value;
       }
       let requestUpdate = objectStore.put(data);
@@ -252,9 +258,16 @@ const listEventListener = (list)=> {
     list.forEach(el => {
       el.addEventListener("click", (e) => {
         let list = document.querySelector(`.list[data-list='${e.currentTarget.dataset.list}'`);
-        
         if(list){
-          // list remove
+          if(e.target.classList.contains("list__title")){
+            if(list.childNodes[5].childNodes[1].childNodes[1].classList){
+              let input = elementChange(e.target, "title");
+              input.classList.add("list__input--title");
+              e.currentTarget.childNodes[5].childNodes[1].childNodes[2].before(input);
+            }
+            return;
+          }
+
           if(e.target.classList.contains("remove")){
             DBDeleteList(list.dataset.list);
             list.remove();
@@ -309,24 +322,21 @@ cardView_popupWrap.addEventListener("click", e => {
   
   if(e.target.classList.contains('cardView__add--btn')){
     cardView_popupWrap.classList.toggle('none');
-    DBDeleteCard(cardDataSet, true);
     return;
   }
   
   if(e.target.classList.contains('cardView__cancel--btn')){
     cardView_popupWrap.classList.toggle('none');
-    listClear();
-    render('trello__card')
     return;
   }
   
   if(e.target.classList.contains('card_btn2')){
-    // btn
     let cardImg = document.querySelector(`.card__img[data-card="${cardView_popupWrap.dataset.card}"]`);
     cardImg.remove();
+    console.log(cardView__form.childNodes[9].innerHTML)
     cardView__form.childNodes[9].innerHTML = ` <label  class="card_btn card_btn1 add__img" for="cardViewImage">이미지 추가</label>`;
     cardView__form.childNodes[3].childNodes[0].src = '';
-    DBCardModify(cardView_popupWrap.dataset.card, 'image', ''); 
+    return;
   }
 });
 
@@ -457,7 +467,7 @@ window.onmousemove = (e) => {
 };
 
 window.onmouseup = (e) => {
-  if (isDown) {
+  if(isDown) {
     isDown = false;
     clone.remove(); 
     clone.removeAttribute('style'); 
@@ -469,7 +479,7 @@ window.onmouseup = (e) => {
       viewCard(mouseCardDataSet);
       return;
     }
-    DBCardModify(mouseCardDataSet, 'key', mouseListDataSet);
+    DBModify(mouseCardDataSet, 'key', mouseListDataSet);
   }
 };
 
@@ -495,6 +505,4 @@ const render = (name) => {
   };
 };
 
-const init = (() => {
-  DBCreate();
-})(); 
+const init = (() => DBCreate())(); 
