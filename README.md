@@ -4,7 +4,9 @@
 
 트렐로는 프로젝트 관리 소프트웨어로 보드 안에 리스트, 리스트 안에 카드가 들어갑니다. 카드는 할 일의 기본 단위로, 제목, 설명, 이미지등을 추가할 수 있습니다.
 
-![image](https://user-images.githubusercontent.com/32596517/150505335-07dc86a1-adf5-466e-b5df-9d2e4d933bae.png)
+| ![image](https://user-images.githubusercontent.com/32596517/150505335-07dc86a1-adf5-466e-b5df-9d2e4d933bae.png) |
+|:--:| 
+| *예시 이미지로 구현해야 하는 UI와 차이가 있음* |
 
 
 
