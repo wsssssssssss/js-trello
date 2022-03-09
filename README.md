@@ -32,7 +32,7 @@
 - 리스트의 제목 클릭시 제목 text를 value로 하는 input으로 변경되고, input의 값이 변경되면 제목에도 변경된 값이 적용된다.
 - 카드 팝업에서 제목 클릭시 제목 text를 value로 하는 input으로 변경되고, input의 값이 변경되면 제목에도 변경된 값이 적용된다.
 - 설명 혹은 "설명을 입력해주세요.." text 클릭시 해당 text를 value로 하는 input으로 변경되고, input의 값이 변경되면 설명에도 변경된 값이 적용된다.
-- 모든 text에서 input으로 변경된 엘리먼트들은 focus out, enter 입력시 다시 text로 변경된다.
+- 모든 text에서 input으로 변경된 엘리먼트들은 enter 입력 혹은 focus out시 다시 text로 변경된다.
 - 제목, 설명이 빈 스트링('') 값이 되어도 클릭해서 input으로 변경할 수 있어야 한다.
 - 리스트의 카드들은 drag & drop으로 위치를 조정할 수 있다. (다른 리스트로 이동도 가능)
 
