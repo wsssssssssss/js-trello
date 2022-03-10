@@ -1,0 +1,160 @@
+* {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100vw;
+  height: 100vh;
+  color: #333;
+}
+
+button {
+  padding: 5px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+li {
+  list-style: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+/* board */
+.board {
+  display: flex;
+  gap: 15px;
+  height: 100vh;
+  padding: 35px;
+  overflow-x: scroll;
+}
+
+/* 리스트 */
+.list {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 15px;
+  margin-bottom: auto;
+}
+
+.addList {
+  flex: 0 0 auto;
+  margin-bottom: auto;
+  padding: 15px;
+}
+
+.listItem {
+  flex: 0 0 auto;
+  min-width: 250px;
+  margin-bottom: auto;
+  padding: 5px;
+  border-radius: 5px;
+  background: #eee;
+}
+
+.listItem .header {
+  display: flex;
+  gap: 5px;
+  height: auto;
+}
+
+.listItem .header h2,
+.listItem .header input {
+  flex: 1;
+  max-width: 300px;
+  font-size: 14px;
+  line-height: 24px;
+  word-break: break-all;
+}
+.listItem .header .removeList {
+  border: 0;
+}
+
+/* 카드 */
+.cardList {
+  margin-top: 10px;
+}
+
+.card {
+  border-radius: 5px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.card + .card {
+  margin-top: 10px;
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.card h3 {
+  padding: 5px;
+  font-size: 16px;
+}
+
+.addCard {
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  background: #fff;
+}
+
+/* 카드 디테일 팝업 */
+.cardPopup {
+  margin: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff;
+}
+.cardPopup::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.cardPopup .content {
+  max-width: 80vw;
+  min-width: 300px;
+  min-height: 300px;
+}
+
+.cardPopup header {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+}
+
+.cardPopup header h2,
+.cardPopup header input {
+  flex: 1;
+  font-size: 20px;
+  line-height: 28px;
+  word-break: break-all;
+}
+
+.cardPopup .content > div {
+  padding: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.cardPopup .content > div img {
+  display: block;
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.title, .description {
+  cursor: pointer;
+}
