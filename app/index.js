@@ -155,8 +155,8 @@ const addPlaceholder = () => {
   });
 }
 
+let tg = null;
 const handleDargStart = ({ pageX, pageY }, target) => {
-  console.log(pageX);
   isDown = true;
 
   const rect = target.getBoundingClientRect();
@@ -185,16 +185,20 @@ const handleDargStart = ({ pageX, pageY }, target) => {
     zIndex: 999,
   });
 
-  target.parentElement.insertBefore(placeholder, target);
-
-  target.remove();
-
-  document.body.appendChild(clone);
+  tg = target;
 }
 
 window.onmousemove = ({ pageX, pageY }) => {
   if (!isDown) {
     return;
+  }
+
+  if (tg) {
+    tg.parentElement.insertBefore(placeholder, tg);
+    tg.remove();
+    document.body.appendChild(clone);
+
+    tg = null;
   }
 
   Object.assign(currentPoint, {
@@ -213,6 +217,10 @@ window.onmousemove = ({ pageX, pageY }) => {
 window.onmouseup = async () => {
   if (isDown) {
     isDown = false;
+
+    if (tg) {
+      return;
+    }
 
     clone.remove();
     clone.removeAttribute('style');
