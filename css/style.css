@@ -1,0 +1,196 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: inherit;
+}
+html,
+body,
+#root {
+    width: 100vw;
+    height: 100vh;
+    color: #333;
+}
+a {
+    text-decoration: none;
+}
+ul,
+li {
+    list-style: none;
+}
+img {
+    vertical-align: middle;
+}
+.flex {
+    display: flex;
+}
+.none {
+    display: none;
+}
+.block {
+    display: block;
+}
+.hidden {
+    visibility: hidden;
+}
+/* .visible {
+    visibility: visible;
+} */
+
+#root {
+    background: #0279bf;
+}
+.addList {
+    color: #fff;
+    background: #5299d0;
+    width: 300px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 5px;
+    padding-left: 20px;
+    margin: 10px;
+}
+.list {
+    background: #eee;
+    width: 300px;
+    height: auto;
+    margin: 10px;
+    border-radius: 5px;
+}
+.listFlex {
+    line-height: 50px;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+.cardFlex {
+    height: auto;
+    flex-direction: column;
+    justify-content: space-around;
+    padding-left: 10px;
+}
+.card {
+    background: #fff;
+    border-radius: 5px;
+    width: 280px;
+    line-height: 40px;
+    margin-bottom: 10px;
+}
+.card > img {
+    width: 280px;
+    border-radius: 5px 5px 0 0;
+}
+.cardTitle {
+    margin-left: 10px;
+}
+.addCardFlex {
+    line-height: 50px;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+.listPopup {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+.listPopup > div {
+    width: 300px;
+    height: auto;
+    margin: 300px auto;
+    background: #fff;
+    padding: 10px;
+    text-align: center;
+}
+.listPopup > div > div {
+    line-height: 200%;
+    text-align: center;
+}
+.listPopup input {
+    width: 280px;
+    height: 25px;
+    display: block;
+}
+.listPopup button {
+    height: 25px;
+    width: 50px;
+    margin-top: 10px;
+}
+.cardTitlePopup {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+.cardTitlePopup > div {
+    width: 300px;
+    height: auto;
+    margin: 300px auto;
+    background: #fff;
+    padding: 10px;
+    text-align: center;
+}
+.cardTitlePopup > div > div {
+    line-height: 200%;
+    text-align: center;
+}
+.cardTitlePopup input {
+    width: 280px;
+    height: 25px;
+    display: block;
+}
+.cardTitlePopup button {
+    height: 25px;
+    width: 50px;
+    margin-top: 10px;
+}
+.cardPopup {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 1;
+}
+.popup {
+    background: #fff;
+    width: 300px;
+    height: auto;
+    margin: 200px auto;
+    padding: 10px;
+}
+.popupTitle {
+    line-height: 50px;
+    text-align: center;
+}
+.popupImg > img {
+    width: 280px;
+}
+.addImgP {
+    border: dashed #333;
+    width: 280px;
+    line-height: 174px;
+    text-align: center;
+}
+.imgBtn {
+    justify-content: space-between;
+}
+.imgBtn > button {
+    width: 80px;
+    height: 25px;
+    margin: 10px 10px 0;
+}
+.cardBtn {
+    justify-content: space-between;
+}
+.cardBtn > button {
+    width: 80px;
+    height: 25px;
+    margin: 10px 10px 0;
+}
