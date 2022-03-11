@@ -3,17 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Trello"
-    />
     <link rel="stylesheet" href="./css/style.css">
     <title>Trello</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root"> 
+      <div class="board">
+        <ul class="list"></ul>
+        <button class="addList">Add list</button>
+      </div>
+    </div>
+    <dialog class="cardPopup"></dialog>
     <script src="app/index.js"></script>
   </body>
 </html>
